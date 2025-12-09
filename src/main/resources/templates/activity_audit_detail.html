@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>審核詳情</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="bg-light">
+
+<div class="container py-5">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/activity/audit/list">待審核列表</a></li>
+            <li class="breadcrumb-item active">審核詳情 #101</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 mb-4">
+                <img src="https://via.placeholder.com/800x300" class="card-img-top" alt="活動圖片"> <div class="card-body p-4">
+                    <span class="badge bg-info text-dark mb-2">Fun Dive</span>
+                    <h2 class="card-title fw-bold mb-3">小琉球三天兩夜潛旅</h2>
+                    
+                    <div class="row mb-4 text-muted">
+                        <div class="col-md-6">📅 開始：2026-01-03 10:00</div>
+                        <div class="col-md-6">🏁 結束：2026-01-05 18:00</div>
+                        <div class="col-md-6">📍 地點：小琉球</div>
+                        <div class="col-md-6">💰 費用：$12,000</div>
+                        <div class="col-md-6">👥 人數：20 人</div>
+                    </div>
+
+                    <h5 class="fw-bold">詳細內容</h5>
+                    <p class="card-text text-secondary">
+                        這裡會顯示幹部填寫的活動詳細介紹，例如集合地點、注意事項、裝備租借規則等等...
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow border-0 sticky-top" style="top: 20px;">
+                <div class="card-header bg-white fw-bold">👮‍♂️ 管理員審核決策</div>
+                <div class="card-body">
+                    <p class="small text-muted">申請人：王小明 (Manager)<br>申請時間：2025-12-09</p>
+                    <hr>
+                    <div class="d-grid gap-2">
+                        <button onclick="approveActivity()" class="btn btn-success btn-lg">
+                            ✅ 核准發佈 (Approve)
+                        </button>
+                        
+                        <button onclick="rejectActivity()" class="btn btn-outline-danger">
+                            ❌ 退回修改 (Reject)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 1. 核准邏輯
+    function approveActivity() {
+        Swal.fire({
+            title: '確認核准？',
+            text: "此活動將會立即上架至前台！",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#198754', // Bootstrap Success Color
+            confirmButtonText: '是的，核准！'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // TODO: 呼叫後端 API (POST /api/audit/approve)
+                Swal.fire('已核准！', '活動已發佈', 'success')
+                .then(() => window.location.href = '/activity/audit/list');
+            }
+        })
+    }
+
+    // 2. 退回邏輯 (包含輸入原因) - 對應 Sequence Diagram [cite: 353]
+    async function rejectActivity() {
+        const { value: text } = await Swal.fire({
+            input: 'textarea',
+            inputLabel: '退回原因',
+            inputPlaceholder: '請輸入需要修改的地方...',
+            inputAttributes: { 'aria-label': 'Type your message here' },
+            showCancelButton: true,
+            confirmButtonText: '確認退回',
+            confirmButtonColor: '#dc3545' // Bootstrap Danger Color
+        })
+
+        if (text) {
+            // TODO: 呼叫後端 API (POST /api/audit/reject, body: {reason: text})
+            Swal.fire('已退回', '通知已發送給幹部，原因：' + text, 'info')
+            .then(() => window.location.href = '/activity/audit/list');
+        }
+    }
+</script>
+
+</body>
+</html>
