@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登入 | 潛水社</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 30px 15px;
+        }
+        
+        /* 動畫背景氣泡 */
+        .bubble {
+            position: absolute;
+            bottom: -100px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: rise 10s infinite ease-in;
+            pointer-events: none;
+        }
+        .bubble:nth-child(1) { width: 40px; height: 40px; left: 10%; animation-delay: 0s; }
+        .bubble:nth-child(2) { width: 60px; height: 60px; left: 20%; animation-delay: 1s; }
+        .bubble:nth-child(3) { width: 80px; height: 80px; left: 30%; animation-delay: 2s; }
+        .bubble:nth-child(4) { width: 50px; height: 50px; left: 50%; animation-delay: 3s; }
+        .bubble:nth-child(5) { width: 70px; height: 70px; left: 70%; animation-delay: 4s; }
+        .bubble:nth-child(6) { width: 90px; height: 90px; left: 90%; animation-delay: 5s; }
+        
+        @keyframes rise {
+            0% { bottom: -100px; transform: translateX(0); opacity: 1; }
+            50% { transform: translateX(100px); opacity: 0.8; }
+            100% { bottom: 110vh; transform: translateX(-100px); opacity: 0; }
+        }
+
+        .container-wrapper {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+        }
+
+        .login-card {
+            background: rgba(255, 255, 255, 0.95);
+            border: none;
+            border-radius: 25px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            width: 100%;
+            backdrop-filter: blur(20px);
+        }
+        
+        .login-header {
+            background: linear-gradient(135deg, #2196F3, #21CBF3);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .login-logo {
+            font-size: 4rem;
+            margin-bottom: 15px;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .login-header h2 {
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-header p {
+            font-size: 0.9rem;
+            margin-bottom: 0;
+        }
+        
+        .btn-ncu-portal {
+            background: linear-gradient(45deg, #1565C0, #1976D2);
+            border: none;
+            color: white;
+            padding: 15px;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(21, 101, 192, 0.4);
+        }
+        
+        .btn-ncu-portal:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(21, 101, 192, 0.6);
+            color: white;
+        }
+        
+        .test-mode-card {
+            background: linear-gradient(135deg, #fff9c4 0%, #fff59d 100%);
+            border: 2px dashed #f57f17;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .role-option {
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 10px;
+            background: white;
+        }
+        
+        .role-option:hover {
+            border-color: #2196F3;
+            background: #e3f2fd;
+            transform: scale(1.02);
+        }
+        
+        .role-option.active {
+            border-color: #2196F3;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        }
+        
+        .role-option input[type="radio"] {
+            margin-right: 10px;
+        }
+
+        .role-option strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .role-option .small {
+            margin-bottom: 0;
+            color: #666;
+        }
+
+        .footer-text {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        /* 響應式調整 */
+        @media (max-width: 576px) {
+            body {
+                padding: 15px;
+            }
+
+            .login-header {
+                padding: 30px 20px;
+            }
+            
+            .login-logo {
+                font-size: 3rem;
+            }
+
+            .login-header h2 {
+                font-size: 1.5rem;
+            }
+
+            .login-header p {
+                font-size: 0.8rem;
+            }
+
+            .test-mode-card {
+                padding: 15px;
+            }
+
+            .role-option {
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- 動畫氣泡 -->
+<div class="bubble"></div>
+<div class="bubble"></div>
+<div class="bubble"></div>
+<div class="bubble"></div>
+<div class="bubble"></div>
+<div class="bubble"></div>
+
+<div class="container-wrapper">
+    <div class="login-card animate__animated animate__fadeInDown">
+        <!-- 登入頭部 -->
+        <div class="login-header">
+            <div class="login-logo">🌊</div>
+            <h2 class="fw-bold mb-2">潛水社系統</h2>
+            <p class="opacity-75">Diving Club Management System</p>
+        </div>
+
+        <!-- 登入表單 -->
+        <div class="p-4">
+            <!-- 錯誤訊息（只在後端傳遞 error 參數時才顯示） -->
+            <div class="alert alert-danger animate__animated animate__shakeX" 
+                 th:if="${error}" 
+                 role="alert"
+                 style="display: none;">
+                <strong>❌ 登入失敗</strong><br>
+                <span th:text="${error}">帳號或密碼錯誤</span>
+            </div>
+
+            <!-- 成功訊息（只在後端傳遞 message 參數時才顯示） -->
+            <div class="alert alert-success animate__animated animate__fadeIn" 
+                 th:if="${message}" 
+                 role="alert"
+                 style="display: none;">
+                <span th:text="${message}">登出成功</span>
+            </div>
+
+            <!-- 中大 Portal 登入 -->
+            <form action="/auth/ncu-portal" method="POST">
+                <button type="submit" class="btn btn-ncu-portal w-100 mb-3">
+                    <span class="fs-5">🎓</span> 使用中大 Portal 登入
+                </button>
+            </form>
+
+            <div class="text-center my-3">
+                <small class="text-muted">─── 或 ───</small>
+            </div>
+
+            <!-- 測試模式 -->
+            <div class="test-mode-card">
+                <div class="d-flex align-items-center mb-3">
+                    <span class="fs-4 me-2">🧪</span>
+                    <div>
+                        <strong>測試模式</strong>
+                        <p class="mb-0 small text-muted">選擇身份快速進入系統</p>
+                    </div>
+                </div>
+
+                <form id="testLoginForm" action="/auth/test-login" method="POST">
+                    <!-- 訪客 -->
+                    <label class="role-option">
+                        <input type="radio" name="testRole" value="GUEST" required>
+                        <strong>👤 訪客 (Guest)</strong>
+                        <p class="small">僅可瀏覽活動</p>
+                    </label>
+
+                    <!-- 社團幹部 -->
+                    <label class="role-option">
+                        <input type="radio" name="testRole" value="MANAGER" required>
+                        <strong>📝 社團幹部 (Manager)</strong>
+                        <p class="small">可建立、編輯活動</p>
+                    </label>
+
+                    <!-- 超級管理員 -->
+                    <label class="role-option">
+                        <input type="radio" name="testRole" value="SUPER" required>
+                        <strong>⚙️ 超級管理員 (SuperManager)</strong>
+                        <p class="small">可審核活動及系統管理</p>
+                    </label>
+
+                    <button type="submit" class="btn btn-outline-primary w-100 mt-3">
+                        進入系統（測試）
+                    </button>
+                </form>
+            </div>
+
+            <!-- 說明文字 -->
+            <div class="mt-4 text-center">
+                <small class="text-muted">
+                    正式環境請使用中大 Portal 登入<br>
+                    測試模式僅供開發與展示使用
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- 版權資訊 -->
+    <div class="footer-text">
+        <small class="text-white opacity-75">
+            © 2025 NCU Diving Club | Developed by Group XX
+        </small>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // 點擊 role-option 時自動選中 radio
+    document.querySelectorAll('.role-option').forEach(option => {
+        option.addEventListener('click', function() {
+            // 移除所有 active class
+            document.querySelectorAll('.role-option').forEach(o => o.classList.remove('active'));
+            // 加上 active class
+            this.classList.add('active');
+            // 選中 radio
+            this.querySelector('input[type="radio"]').checked = true;
+        });
+    });
+
+    // 表單送出動畫
+    document.getElementById('testLoginForm').addEventListener('submit', function(e) {
+        const selectedRole = document.querySelector('input[name="testRole"]:checked');
+        if (!selectedRole) {
+            e.preventDefault();
+            alert('請選擇一個身份');
+            return;
+        }
+
+        // 在實際環境中，這裡會送出表單
+        // 測試時可以直接導向
+        e.preventDefault();
+        
+        const roleMap = {
+            'GUEST': '訪客',
+            'MANAGER': '社團幹部',
+            'SUPER': '超級管理員'
+        };
+
+        const roleName = roleMap[selectedRole.value];
+        
+        // 顯示載入動畫
+        const btn = this.querySelector('button[type="submit"]');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>載入中...';
+        btn.disabled = true;
+
+        // 模擬登入延遲
+        setTimeout(() => {
+            alert(`測試登入成功！身份：${roleName}\n\n實際環境請後端實作登入邏輯`);
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            // window.location.href = '/activity/list';
+        }, 1000);
+    });
+</script>
+</body>
+</html>

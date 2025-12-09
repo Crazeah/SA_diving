@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首頁 | 潛水社</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        body {
+            background: linear-gradient(135deg, #e0f7fa 0%, #80deea 100%);
+            min-height: 100vh;
+        }
+        .navbar-custom {
+            background: linear-gradient(135deg, #2196F3, #21CBF3);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .hero {
+            background: linear-gradient(135deg, rgba(33, 150, 243, 0.95), rgba(33, 203, 243, 0.95)),
+                        url('https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1600') center/cover;
+            color: white;
+            padding: 120px 0;
+            text-align: center;
+            border-radius: 0 0 50px 50px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+        }
+        .feature-card {
+            background: white;
+            border: none;
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            height: 100%;
+        }
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 50px rgba(33, 150, 243, 0.3);
+        }
+        .feature-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+        .stat-box {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .stat-number {
+            font-size: 3rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #2196F3, #21CBF3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .quick-action-btn {
+            background: white;
+            border: none;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            display: block;
+            text-decoration: none;
+            color: inherit;
+        }
+        .quick-action-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(33, 150, 243, 0.3);
+            color: inherit;
+        }
+        .quick-action-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- 導航列 -->
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom mb-0">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="/">🌊 潛水社系統</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">首頁</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/activity/list">活動列表</a>
+                </li>
+                <!-- 僅 Manager 以上看得到 -->
+                <li class="nav-item" th:if="${user != null and (user.role == 'MANAGER' or user.role == 'SUPER')}">
+                    <a class="nav-link" href="/activity/create">建立活動</a>
+                </li>
+                <!-- 僅 SuperManager 看得到 -->
+                <li class="nav-item" th:if="${user != null and user.role == 'SUPER'}">
+                    <a class="nav-link" href="/activity/audit/list">
+                        待審核 <span class="badge bg-warning" th:text="${pendingCount}">3</span>
+                    </a>
+                </li>
+                <!-- 使用者資訊 -->
+                <li class="nav-item" th:if="${user != null}">
+                    <span class="nav-link">
+                        👤 <span th:text="${user.name}">使用者</span>
+                    </span>
+                </li>
+                <li class="nav-item" th:if="${user != null}">
+                    <a class="nav-link" href="/logout">登出</a>
+                </li>
+                <li class="nav-item" th:if="${user == null}">
+                    <a class="nav-link btn btn-outline-light btn-sm" href="/login">登入</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Hero Section -->
+<div class="hero animate__animated animate__fadeIn">
+    <div class="container">
+        <h1 class="display-3 fw-bold mb-4 animate__animated animate__fadeInDown">
+            🌊 探索水下世界的無限可能
+        </h1>
+        <p class="lead mb-5 animate__animated animate__fadeInUp animate__delay-1s">
+            加入潛水社，體驗前所未有的海洋冒險
+        </p>
+        <div class="d-flex justify-content-center gap-3 animate__animated animate__fadeInUp animate__delay-2s">
+            <a href="/activity/list" class="btn btn-light btn-lg px-5 py-3 fw-bold">
+                瀏覽活動 →
+            </a>
+            <a href="/login" class="btn btn-outline-light btn-lg px-5 py-3 fw-bold" th:if="${user == null}">
+                立即加入
+            </a>
+        </div>
+
+        <!-- 統計資訊 -->
+        <div class="row mt-5 pt-5">
+            <div class="col-md-4 mb-3">
+                <div class="stat-box animate__animated animate__fadeInLeft">
+                    <div class="stat-number" th:text="${totalActivities} ?: '24'">24</div>
+                    <div class="fw-bold text-muted">場活動</div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="stat-box animate__animated animate__fadeInUp">
+                    <div class="stat-number" th:text="${totalMembers} ?: '156'">156</div>
+                    <div class="fw-bold text-muted">位會員</div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="stat-box animate__animated animate__fadeInRight">
+                    <div class="stat-number" th:text="${totalDives} ?: '89'">89</div>
+                    <div class="fw-bold text-muted">次潛水</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-5">
+    <!-- 快速操作區（根據角色顯示） -->
+    <div class="row mb-5" th:if="${user != null}">
+        <div class="col-12">
+            <h3 class="fw-bold mb-4 text-center">⚡ 快速操作</h3>
+        </div>
+        
+        <!-- 所有人都看得到 -->
+        <div class="col-md-4 mb-3">
+            <a href="/activity/list" class="quick-action-btn">
+                <div class="quick-action-icon">📋</div>
+                <h5 class="fw-bold mb-2">瀏覽活動</h5>
+                <p class="text-muted small mb-0">查看所有可報名活動</p>
+            </a>
+        </div>
+
+        <!-- Manager 以上看得到 -->
+        <div class="col-md-4 mb-3" th:if="${user.role == 'MANAGER' or user.role == 'SUPER'}">
+            <a href="/activity/create" class="quick-action-btn">
+                <div class="quick-action-icon">➕</div>
+                <h5 class="fw-bold mb-2">建立活動</h5>
+                <p class="text-muted small mb-0">發起新的潛水活動</p>
+            </a>
+        </div>
+
+        <!-- SuperManager 看得到 -->
+        <div class="col-md-4 mb-3" th:if="${user.role == 'SUPER'}">
+            <a href="/activity/audit/list" class="quick-action-btn">
+                <div class="quick-action-icon">✅</div>
+                <h5 class="fw-bold mb-2">審核活動</h5>
+                <p class="text-muted small mb-0">
+                    <span class="badge bg-warning" th:text="${pendingCount}">3</span> 筆待處理
+                </p>
+            </a>
+        </div>
+    </div>
+
+    <!-- 功能特色 -->
+    <div class="row mb-5">
+        <div class="col-12 text-center mb-5">
+            <h2 class="fw-bold">🎯 系統功能特色</h2>
+            <p class="text-muted">完善的潛水社團管理平台</p>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="feature-card animate__animated animate__fadeInLeft">
+                <span class="feature-icon">🏊</span>
+                <h4 class="fw-bold mb-3">活動管理</h4>
+                <p class="text-muted">
+                    輕鬆建立、編輯和管理各類潛水活動，包含 Fun Dive、課程教學、社團聚會等
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="feature-card animate__animated animate__fadeInUp">
+                <span class="feature-icon">✅</span>
+                <h4 class="fw-bold mb-3">審核機制</h4>
+                <p class="text-muted">
+                    完善的活動審核流程，確保所有活動符合安全標準和社團規範
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="feature-card animate__animated animate__fadeInRight">
+                <span class="feature-icon">📊</span>
+                <h4 class="fw-bold mb-3">數據統計</h4>
+                <p class="text-muted">
+                    即時掌握活動參與狀況、會員數據，幫助更好地規劃未來活動
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 最新活動預覽 -->
+    <div class="row">
+        <div class="col-12 text-center mb-5">
+            <h2 class="fw-bold">🌟 最新活動</h2>
+            <p class="text-muted">探索即將開始的精彩活動</p>
+        </div>
+
+        <!-- 活動預覽卡片（顯示最新 3 筆） -->
+        <div class="col-md-4 mb-4" th:each="activity, iterStat : ${recentActivities}" th:if="${iterStat.index < 3}">
+            <div class="card border-0 shadow-sm" style="border-radius: 20px; overflow: hidden; transition: transform 0.3s;">
+                <img th:src="${activity.imageUrl} ?: 'https://via.placeholder.com/400x200/2196F3/FFFFFF?text=Diving'" 
+                     class="card-img-top" 
+                     style="height: 200px; object-fit: cover;"
+                     alt="活動圖片">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold" th:text="${activity.title}">小琉球潛旅</h5>
+                    <p class="text-muted small">
+                        📅 <span th:text="${#temporals.format(activity.startTime, 'MM/dd')}">01/03</span> | 
+                        📍 <span th:text="${activity.location}">小琉球</span>
+                    </p>
+                    <a th:href="@{/activity/{id}(id=${activity.id})}" class="btn btn-outline-primary w-100">
+                        查看詳情
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 如果沒有活動 -->
+        <div class="col-12 text-center py-5" th:if="${#lists.isEmpty(recentActivities)}">
+            <p class="text-muted">目前沒有最新活動，敬請期待！</p>
+        </div>
+
+        <!-- 查看更多 -->
+        <div class="col-12 text-center mt-4">
+            <a href="/activity/list" class="btn btn-primary btn-lg px-5">
+                查看所有活動 →
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer class="bg-white mt-5 py-4 shadow-sm">
+    <div class="container text-center">
+        <p class="text-muted mb-2">
+            🌊 國立中央大學潛水社 | NCU Diving Club
+        </p>
+        <p class="text-muted small mb-0">
+            © 2025 All Rights Reserved | 前社長真的好漂亮瘋掉
+        </p>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // 卡片 Hover 效果
+    document.querySelectorAll('.card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-10px)';
+        });
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+</script>
+</body>
+</html>
