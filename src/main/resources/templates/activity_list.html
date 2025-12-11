@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>活動列表 | 潛水社</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #e0f7fa 0%, #80deea 100%);
+            min-height: 100vh;
+        }
+
+        .navbar-custom {
+            background: linear-gradient(135deg, #2196F3, #21CBF3);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .activity-card {
+            background: white;
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+            height: 100%;
+        }
+
+        .activity-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(33, 150, 243, 0.3);
+        }
+
+        .status-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+
+        .status-published {
+            background: #4caf50;
+            color: white;
+        }
+
+        .status-pending_review {
+            background: #ff9800;
+            color: white;
+        }
+
+        .status-drafting {
+            background: #9e9e9e;
+            color: white;
+        }
+
+        .status-cancelled {
+            background: #f44336;
+            color: white;
+        }
+
+        .status-ended {
+            background: #607d8b;
+            color: white;
+        }
+
+        .status-needs_revision {
+            background: #e91e63;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 導航列 -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="/">🌊 潛水社系統</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">首頁</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/activity/list">活動列表</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasAnyRole('MANAGER', 'ADMIN')">
+                        <a class="nav-link" href="/activity/create">建立活動</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasAnyRole('MANAGER', 'ADMIN')">
+                        <a class="nav-link" href="/activity/my-list">我的活動</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                        <a class="nav-link" href="/activity/audit/list">活動審核</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="isAuthenticated()">
+                        <a class="nav-link" href="/logout">登出</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="!isAuthenticated()">
+                        <a class="nav-link" href="/login">登入</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要內容 -->
+    <div class="container py-5">
+        <div class="row mb-4">
+            <div class="col">
+                <h1 class="fw-bold">🏊 活動列表</h1>
+                <p class="text-muted">探索所有潛水活動</p>
+            </div>
+        </div>
+
+        <!-- 成功/錯誤訊息 -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- 篩選器 -->
+        <div class="card mb-4 border-0 shadow-sm">
+            <div class="card-body">
+                <form th:action="@{/activity/list}" method="GET">
+                    <div class="row g-3">
+                        <div class="col-md-5">
+                            <input type="text" class="form-control" name="keyword" th:value="${keyword}"
+                                placeholder="搜尋活動...">
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-select" name="category">
+                                <option value="">所有類別</option>
+                                <option value="水肺潛水" th:selected="${category == '水肺潛水'}">水肺潛水</option>
+                                <option value="自由潛水" th:selected="${category == '自由潛水'}">自由潛水</option>
+                                <option value="浮潛" th:selected="${category == '浮潛'}">浮潛</option>
+                                <option value="進階訓練" th:selected="${category == '進階訓練'}">進階訓練</option>
+                                <option value="fun_dive" th:selected="${category == 'fun_dive'}">Fun Dive</option>
+                                <option value="course" th:selected="${category == 'course'}">課程教學</option>
+                                <option value="meeting" th:selected="${category == 'meeting'}">社團聚會</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" class="btn btn-primary w-100">搜尋</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 活動列表 -->
+        <div class="row g-4">
+            <!-- 沒有活動時顯示 -->
+            <div class="col-12 text-center" th:if="${#lists.isEmpty(activities)}">
+                <div class="alert alert-info">目前沒有活動</div>
+            </div>
+
+            <!-- 活動卡片 -->
+            <div class="col-md-6 col-lg-4" th:each="activity : ${activities}">
+                <div class="activity-card">
+                    <img th:src="${activity.imageUrl} ?: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400'"
+                        class="card-img-top" th:alt="${activity.title}"
+                        style="height: 200px; object-fit: cover; border-radius: 15px 15px 0 0;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title mb-0" th:text="${activity.title}">活動標題</h5>
+                            <span class="status-badge"
+                                th:classappend="'status-' + ${#strings.toLowerCase(activity.status.name())}"
+                                th:text="${activity.status.displayName}">已發布</span>
+                        </div>
+                        <p class="text-muted small mb-2">
+                            📁 <span th:text="${activity.category}">類別</span>
+                        </p>
+                        <p class="card-text" th:text="${#strings.abbreviate(activity.description, 80)}">活動描述...</p>
+                        <div class="mb-2">
+                            <small class="text-muted">
+                                📅 <span
+                                    th:text="${#temporals.format(activity.startTime, 'yyyy-MM-dd HH:mm')}">開始時間</span>
+                            </small>
+                        </div>
+                        <div class="mb-2">
+                            <small class="text-muted">
+                                📍 <span th:text="${activity.location}">地點</span>
+                            </small>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-primary fw-bold">
+                                NT$ <span
+                                    th:text="${#numbers.formatDecimal(activity.cost, 0, 'COMMA', 0, 'POINT')}">0</span>
+                            </span>
+                            <a th:href="@{/activity/{id}(id=${activity.activityId})}"
+                                class="btn btn-outline-primary btn-sm">查看詳情</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

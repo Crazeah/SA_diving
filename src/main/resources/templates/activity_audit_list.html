@@ -1,59 +1,69 @@
 <!DOCTYPE html>
-<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
 <head>
     <meta charset="UTF-8">
     <title>待審核列表 | 管理後台</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
     <style>
-        body { 
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); 
+        body {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             min-height: 100vh;
             padding-top: 20px;
         }
+
         .navbar-custom {
             background: linear-gradient(135deg, #2196F3, #21CBF3);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
+
         .card {
             border: none;
             border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
             transition: transform 0.2s;
         }
+
         .card:hover {
             transform: translateY(-2px);
         }
+
         .table-hover tbody tr {
             cursor: pointer;
             transition: all 0.2s;
         }
-        .table-hover tbody tr:hover { 
+
+        .table-hover tbody tr:hover {
             background-color: #e3f2fd;
             transform: scale(1.01);
         }
-        .status-badge { 
+
+        .status-badge {
             background: linear-gradient(45deg, #ff9800, #ff6f00);
-            color: white; 
-            padding: 6px 12px; 
-            border-radius: 20px; 
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
             font-size: 0.8em;
             font-weight: 600;
             box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
         }
+
         .category-badge {
             padding: 4px 10px;
             border-radius: 12px;
             font-size: 0.85em;
             font-weight: 500;
         }
+
         .filter-card {
             background: white;
             border-radius: 15px;
             padding: 20px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
         }
+
         .stat-card {
             background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
             border-radius: 12px;
@@ -61,16 +71,19 @@
             text-align: center;
             border: 2px solid #e9ecef;
         }
+
         .stat-number {
             font-size: 2rem;
             font-weight: bold;
             color: #2196F3;
         }
+
         .empty-state {
             text-align: center;
             padding: 60px 20px;
             color: #6c757d;
         }
+
         .empty-state-icon {
             font-size: 4rem;
             margin-bottom: 20px;
@@ -78,204 +91,192 @@
         }
     </style>
 </head>
+
 <body>
 
-<!-- 導航列 -->
-<nav class="navbar navbar-dark navbar-custom mb-4">
-    <div class="container-fluid">
-        <a class="navbar-brand fw-bold" href="/">🌊 潛水社管理系統</a>
-        <div class="d-flex align-items-center">
-            <span class="text-white me-3">
-                <span th:text="${currentUser.name}">管理員</span>
-                <small class="opacity-75">(SuperManager)</small>
-            </span>
-            <a href="/logout" class="btn btn-outline-light btn-sm">登出</a>
-        </div>
-    </div>
-</nav>
-
-<div class="container">
-    <!-- 頁面標題與統計 -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="fw-bold text-dark mb-1">📋 待審核活動列表</h2>
-            <p class="text-muted small mb-0">Pending Activities Audit List</p>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number" th:text="${pendingCount} ?: '0'">0</div>
-            <small class="text-muted">件待辦</small>
-        </div>
-    </div>
-
-    <!-- 搜尋與篩選區 -->
-    <div class="filter-card animate__animated animate__fadeInDown">
-        <form id="filterForm" method="GET" th:action="@{/activity/audit/list}">
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label fw-bold small">🔍 搜尋活動標題或提案人</label>
-                    <input type="text" name="keyword" class="form-control" 
-                           th:value="${param.keyword}"
-                           placeholder="輸入關鍵字...">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-bold small">📁 活動類別</label>
-                    <select name="category" class="form-select">
-                        <option value="">全部類別</option>
-                        <option value="fun_dive" th:selected="${param.category == 'fun_dive'}">🐠 Fun Dive</option>
-                        <option value="course" th:selected="${param.category == 'course'}">🎓 課程教學</option>
-                        <option value="meeting" th:selected="${param.category == 'meeting'}">🍻 社團聚會</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-bold small">📅 申請時間排序</label>
-                    <select name="sortBy" class="form-select">
-                        <option value="newest" th:selected="${param.sortBy == 'newest' or param.sortBy == null}">最新優先</option>
-                        <option value="oldest" th:selected="${param.sortBy == 'oldest'}">最舊優先</option>
-                    </select>
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary w-100">
-                        篩選
-                    </button>
-                </div>
-            </div>
-        </form>
-    </div>
-
-    <!-- 待審核列表 -->
-    <div class="card animate__animated animate__fadeInUp">
-        <div class="card-body p-0">
-            <!-- 有資料時顯示表格 -->
-            <div th:if="${!#lists.isEmpty(pendingActivities)}">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th style="width: 80px;">ID</th>
-                            <th>活動標題</th>
-                            <th style="width: 120px;">類別</th>
-                            <th style="width: 150px;">提案幹部</th>
-                            <th style="width: 150px;">申請時間</th>
-                            <th style="width: 100px;">狀態</th>
-                            <th style="width: 120px;">操作</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="activity : ${pendingActivities}" 
-                            th:onclick="'window.location.href=\'/activity/audit/' + ${activity.id} + '\''">
-                            
-                            <td class="fw-bold text-primary" th:text="'#' + ${activity.id}">#101</td>
-                            
-                            <td>
-                                <div class="fw-bold" th:text="${activity.title}">小琉球三天兩夜潛旅</div>
-                                <small class="text-muted">
-                                    📍 <span th:text="${activity.location}">小琉球</span> | 
-                                    💰 <span th:text="'$' + ${activity.cost}">$12,000</span> | 
-                                    👥 <span th:text="${activity.maxParticipants} + '人'">20人</span>
-                                </small>
-                            </td>
-                            
-                            <td>
-                                <span class="badge category-badge"
-                                      th:classappend="${activity.category.name() == 'FUN_DIVE'} ? 'bg-info' :
-                                                      ${activity.category.name() == 'COURSE'} ? 'bg-success' :
-                                                      ${activity.category.name() == 'MEETING'} ? 'bg-warning' : 'bg-secondary'"
-                                      th:text="${activity.category.displayName}">
-                                    Fun Dive
-                                </span>
-                            </td>
-                            
-                            <td>
-                                <div th:text="${activity.creator.name}">王小明</div>
-                                <small class="text-muted">Manager</small>
-                            </td>
-                            
-                            <td class="text-muted" th:text="${#temporals.format(activity.createdAt, 'yyyy-MM-dd HH:mm')}">
-                                2025-12-09 10:30
-                            </td>
-                            
-                            <td>
-                                <span class="status-badge">Pending</span>
-                            </td>
-                            
-                            <td>
-                                <a th:href="@{/activity/audit/{id}(id=${activity.id})}" 
-                                   class="btn btn-sm btn-outline-primary"
-                                   onclick="event.stopPropagation();">
-                                    審核
-                                </a>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- 沒有資料時顯示空狀態 -->
-            <div th:if="${#lists.isEmpty(pendingActivities)}" class="empty-state">
-                <div class="empty-state-icon">🎉</div>
-                <h4 class="mb-2">目前沒有待審核的活動</h4>
-                <p class="text-muted">所有活動都已處理完畢</p>
-                <a href="/activity/list" class="btn btn-outline-primary mt-3">
-                    查看已發布活動
-                </a>
+    <!-- 導航列 -->
+    <nav class="navbar navbar-dark navbar-custom mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="/">🌊 潛水社管理系統</a>
+            <div class="d-flex align-items-center">
+                <span class="text-white me-3">
+                    <span th:text="${currentUser?.name}">管理員</span>
+                    <small class="opacity-75">(SuperManager)</small>
+                </span>
+                <a href="/logout" class="btn btn-outline-light btn-sm">登出</a>
             </div>
         </div>
-    </div>
-
-    <!-- 分頁導航 -->
-    <nav th:if="${totalPages > 1}" class="mt-4" aria-label="Page navigation">
-        <ul class="pagination justify-content-center">
-            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                <a class="page-link" th:href="@{/activity/audit/list(page=${currentPage - 1}, keyword=${param.keyword}, category=${param.category})}">
-                    上一頁
-                </a>
-            </li>
-            
-            <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
-                th:classappend="${i == currentPage} ? 'active'">
-                <a class="page-link" th:href="@{/activity/audit/list(page=${i}, keyword=${param.keyword}, category=${param.category})}"
-                   th:text="${i + 1}">1</a>
-            </li>
-            
-            <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
-                <a class="page-link" th:href="@{/activity/audit/list(page=${currentPage + 1}, keyword=${param.keyword}, category=${param.category})}">
-                    下一頁
-                </a>
-            </li>
-        </ul>
     </nav>
 
-    <!-- 快速統計卡片 -->
-    <div class="row mt-4">
-        <div class="col-md-4">
-            <div class="card text-center">
-                <div class="card-body">
-                    <h5 class="card-title">📊 今日新增</h5>
-                    <p class="stat-number text-info" th:text="${todayCount} ?: '0'">0</p>
-                    <small class="text-muted">筆待審核</small>
+    <div class="container">
+        <!-- 成功/錯誤訊息 -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- 頁面標題與統計 -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold text-dark mb-1">📋 待審核活動列表</h2>
+                <p class="text-muted small mb-0">Pending Activities Audit List</p>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" th:text="${pendingCount} ?: '0'">0</div>
+                <small class="text-muted">件待辦</small>
+            </div>
+        </div>
+
+        <!-- 搜尋與篩選區 -->
+        <div class="filter-card animate__animated animate__fadeInDown">
+            <form id="filterForm" method="GET" th:action="@{/activity/audit/list}">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold small">🔍 搜尋活動標題或提案人</label>
+                        <input type="text" name="keyword" class="form-control" th:value="${param.keyword}"
+                            placeholder="輸入關鍵字...">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold small">📁 活動類別</label>
+                        <select name="category" class="form-select">
+                            <option value="">全部類別</option>
+                            <option value="fun_dive" th:selected="${param.category == 'fun_dive'}">🐠 Fun Dive</option>
+                            <option value="course" th:selected="${param.category == 'course'}">🎓 課程教學</option>
+                            <option value="meeting" th:selected="${param.category == 'meeting'}">🍻 社團聚會</option>
+                            <option value="水肺潛水" th:selected="${param.category == '水肺潛水'}">水肺潛水</option>
+                            <option value="自由潛水" th:selected="${param.category == '自由潛水'}">自由潛水</option>
+                            <option value="浮潛" th:selected="${param.category == '浮潛'}">浮潛</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold small">📅 申請時間排序</label>
+                        <select name="sortBy" class="form-select">
+                            <option value="newest" th:selected="${param.sortBy == 'newest' or param.sortBy == null}">
+                                最新優先</option>
+                            <option value="oldest" th:selected="${param.sortBy == 'oldest'}">最舊優先</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            篩選
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- 待審核列表 -->
+        <div class="card animate__animated animate__fadeInUp">
+            <div class="card-body p-0">
+                <!-- 有資料時顯示表格 -->
+                <div th:if="${!#lists.isEmpty(pendingActivities)}">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 80px;">ID</th>
+                                <th>活動標題</th>
+                                <th style="width: 120px;">類別</th>
+                                <th style="width: 150px;">提案幹部</th>
+                                <th style="width: 150px;">申請時間</th>
+                                <th style="width: 100px;">狀態</th>
+                                <th style="width: 120px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="activity : ${pendingActivities}"
+                                th:onclick="|window.location.href='/activity/audit/' + ${activity.activityId}|"
+                                style="cursor: pointer;">
+
+                                <td class="fw-bold text-primary" th:text="'#' + ${activity.activityId}">#101</td>
+
+                                <td>
+                                    <div class="fw-bold" th:text="${activity.title}">小琉球三天兩夜潛旅</div>
+                                    <small class="text-muted">
+                                        📍 <span th:text="${activity.location}">小琉球</span> |
+                                        💰 <span
+                                            th:text="'$' + ${#numbers.formatDecimal(activity.cost, 0, 'COMMA', 0, 'POINT')}">$12,000</span>
+                                        |
+                                        👥 <span th:text="${activity.maxParticipants} + '人'">20人</span>
+                                    </small>
+                                </td>
+
+                                <td>
+                                    <span class="badge category-badge bg-info" th:text="${activity.category}">
+                                        水肺潛水
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <div th:text="${activity.creator.name}">王小明</div>
+                                    <small class="text-muted">Manager</small>
+                                </td>
+
+                                <td class="text-muted"
+                                    th:text="${#temporals.format(activity.createdAt, 'yyyy-MM-dd HH:mm')}">
+                                    2025-12-09 10:30
+                                </td>
+
+                                <td>
+                                    <span class="status-badge">待審核</span>
+                                </td>
+
+                                <td>
+                                    <a th:href="@{/activity/audit/{id}(id=${activity.activityId})}"
+                                        class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation();">
+                                        審核
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 沒有資料時顯示空狀態 -->
+                <div th:if="${#lists.isEmpty(pendingActivities)}" class="empty-state">
+                    <div class="empty-state-icon">🎉</div>
+                    <h4 class="mb-2">目前沒有待審核的活動</h4>
+                    <p class="text-muted">所有活動都已處理完畢</p>
+                    <a href="/activity/list" class="btn btn-outline-primary mt-3">
+                        查看已發布活動
+                    </a>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card text-center">
-                <div class="card-body">
-                    <h5 class="card-title">✅ 本週已核准</h5>
-                    <p class="stat-number text-success" th:text="${weekApproved} ?: '0'">0</p>
-                    <small class="text-muted">筆活動</small>
-                </div>
+
+        <!-- 快速操作 -->
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <a href="/" class="card text-center text-decoration-none">
+                    <div class="card-body">
+                        <h5 class="card-title">🏠 返回首頁</h5>
+                        <small class="text-muted">回到系統首頁</small>
+                    </div>
+                </a>
             </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card text-center">
-                <div class="card-body">
-                    <h5 class="card-title">⏰ 平均審核時間</h5>
-                    <p class="stat-number text-warning" th:text="${avgAuditHours} ?: '0'">2.5</p>
-                    <small class="text-muted">小時</small>
-                </div>
+            <div class="col-md-4">
+                <a href="/activity/list" class="card text-center text-decoration-none">
+                    <div class="card-body">
+                        <h5 class="card-title">📋 活動列表</h5>
+                        <small class="text-muted">查看所有已發布活動</small>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="/activity/create" class="card text-center text-decoration-none">
+                    <div class="card-body">
+                        <h5 class="card-title">➕ 建立活動</h5>
+                        <small class="text-muted">新增一個活動</small>
+                    </div>
+                </a>
             </div>
         </div>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

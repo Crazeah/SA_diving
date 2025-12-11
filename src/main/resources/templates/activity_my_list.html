@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的活動 | 潛水社</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #e0f7fa 0%, #80deea 100%);
+            min-height: 100vh;
+        }
+
+        .navbar-custom {
+            background: linear-gradient(135deg, #2196F3, #21CBF3);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(33, 150, 243, 0.2);
+        }
+
+        .status-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-published {
+            background: #4caf50;
+            color: white;
+        }
+
+        .status-pending_review {
+            background: #ff9800;
+            color: white;
+        }
+
+        .status-drafting {
+            background: #9e9e9e;
+            color: white;
+        }
+
+        .status-cancelled {
+            background: #f44336;
+            color: white;
+        }
+
+        .status-ended {
+            background: #607d8b;
+            color: white;
+        }
+
+        .status-needs_revision {
+            background: #e91e63;
+            color: white;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: #e3f2fd;
+        }
+
+        .btn-action {
+            padding: 5px 10px;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 導航列 -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="/">🌊 潛水社系統</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">首頁</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/activity/list">活動列表</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/activity/create">建立活動</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/activity/my-list">我的活動</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                        <a class="nav-link" href="/activity/audit/list">活動審核</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout">登出</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主要內容 -->
+    <div class="container py-5">
+        <div class="row mb-4">
+            <div class="col">
+                <h1 class="fw-bold">📋 我的活動</h1>
+                <p class="text-muted">管理您建立的所有活動</p>
+            </div>
+            <div class="col-auto">
+                <a href="/activity/create" class="btn btn-primary btn-lg">
+                    ➕ 建立新活動
+                </a>
+            </div>
+        </div>
+
+        <!-- 成功/錯誤訊息 -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- 活動列表 -->
+        <div class="card">
+            <div class="card-body p-0">
+                <!-- 沒有活動時顯示 -->
+                <div th:if="${#lists.isEmpty(activities)}" class="text-center py-5">
+                    <h4 class="text-muted mb-3">📭 您還沒有建立任何活動</h4>
+                    <p class="text-muted">點擊下方按鈕開始建立您的第一個活動</p>
+                    <a href="/activity/create" class="btn btn-primary btn-lg mt-3">
+                        ➕ 建立新活動
+                    </a>
+                </div>
+
+                <!-- 有活動時顯示表格 -->
+                <div th:if="${!#lists.isEmpty(activities)}">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>標題</th>
+                                <th>類別</th>
+                                <th>活動時間</th>
+                                <th>狀態</th>
+                                <th>建立時間</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="activity : ${activities}">
+                                <td class="fw-bold text-primary" th:text="'#' + ${activity.activityId}">#1</td>
+                                <td>
+                                    <strong th:text="${activity.title}">活動標題</strong>
+                                    <br>
+                                    <small class="text-muted" th:text="'📍 ' + ${activity.location}">地點</small>
+                                </td>
+                                <td th:text="${activity.category}">類別</td>
+                                <td>
+                                    <small
+                                        th:text="${#temporals.format(activity.startTime, 'yyyy-MM-dd HH:mm')}">開始</small>
+                                    <br>
+                                    <small class="text-muted">~</small>
+                                    <br>
+                                    <small
+                                        th:text="${#temporals.format(activity.endTime, 'yyyy-MM-dd HH:mm')}">結束</small>
+                                </td>
+                                <td>
+                                    <span class="status-badge"
+                                        th:classappend="'status-' + ${#strings.toLowerCase(activity.status.name())}"
+                                        th:text="${activity.status.displayName}">狀態</span>
+                                    <!-- 顯示退回原因 -->
+                                    <div th:if="${activity.status.name() == 'NEEDS_REVISION'}" class="mt-1">
+                                        <small class="text-danger"
+                                            th:text="'⚠️ ' + ${activity.rejectionReason}">退回原因</small>
+                                    </div>
+                                </td>
+                                <td th:text="${#temporals.format(activity.createdAt, 'yyyy-MM-dd HH:mm')}">建立時間</td>
+                                <td>
+                                    <div class="btn-group-vertical">
+                                        <!-- 可編輯狀態：草稿、需修正 -->
+                                        <a th:if="${activity.status.name() == 'DRAFTING' or activity.status.name() == 'NEEDS_REVISION'}"
+                                            th:href="@{/activity/edit/{id}(id=${activity.activityId})}"
+                                            class="btn btn-outline-primary btn-action">
+                                            ✏️ 編輯
+                                        </a>
+
+                                        <!-- 草稿狀態可送審 -->
+                                        <form th:if="${activity.status.name() == 'DRAFTING'}"
+                                            th:action="@{/activity/submit/{id}(id=${activity.activityId})}"
+                                            method="POST" style="display: inline;">
+                                            <button type="submit" class="btn btn-outline-success btn-action w-100">
+                                                📤 送審
+                                            </button>
+                                        </form>
+
+                                        <!-- 需修正狀態可重新送審 -->
+                                        <form th:if="${activity.status.name() == 'NEEDS_REVISION'}"
+                                            th:action="@{/activity/submit/{id}(id=${activity.activityId})}"
+                                            method="POST" style="display: inline;">
+                                            <button type="submit" class="btn btn-outline-warning btn-action w-100">
+                                                🔄 重新送審
+                                            </button>
+                                        </form>
+
+                                        <!-- 已發布可取消 -->
+                                        <form th:if="${activity.status.name() == 'PUBLISHED'}"
+                                            th:action="@{/activity/cancel/{id}(id=${activity.activityId})}"
+                                            method="POST" style="display: inline;"
+                                            onsubmit="return confirm('確定要取消此活動嗎？');">
+                                            <button type="submit" class="btn btn-outline-danger btn-action w-100">
+                                                ❌ 取消
+                                            </button>
+                                        </form>
+
+                                        <!-- 草稿、需修正可刪除 -->
+                                        <form
+                                            th:if="${activity.status.name() == 'DRAFTING' or activity.status.name() == 'NEEDS_REVISION'}"
+                                            th:action="@{/activity/delete/{id}(id=${activity.activityId})}"
+                                            method="POST" style="display: inline;"
+                                            onsubmit="return confirm('確定要刪除此活動嗎？此操作無法復原！');">
+                                            <button type="submit" class="btn btn-outline-danger btn-action w-100">
+                                                🗑️ 刪除
+                                            </button>
+                                        </form>
+
+                                        <!-- 查看詳情 -->
+                                        <a th:href="@{/activity/{id}(id=${activity.activityId})}"
+                                            class="btn btn-outline-secondary btn-action">
+                                            👁️ 查看
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 狀態說明 -->
+        <div class="card mt-4">
+            <div class="card-header fw-bold">📊 活動狀態說明</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <span class="status-badge status-drafting">草稿</span>
+                        <small class="ms-2 text-muted">尚未送審的活動</small>
+                    </div>
+                    <div class="col-md-4">
+                        <span class="status-badge status-pending_review">審核中</span>
+                        <small class="ms-2 text-muted">等待管理員審核</small>
+                    </div>
+                    <div class="col-md-4">
+                        <span class="status-badge status-needs_revision">需修正</span>
+                        <small class="ms-2 text-muted">已退回，需修改後重新送審</small>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <span class="status-badge status-published">已發布</span>
+                        <small class="ms-2 text-muted">活動已上架</small>
+                    </div>
+                    <div class="col-md-4">
+                        <span class="status-badge status-ended">已結束</span>
+                        <small class="ms-2 text-muted">活動已過期</small>
+                    </div>
+                    <div class="col-md-4">
+                        <span class="status-badge status-cancelled">已取消</span>
+                        <small class="ms-2 text-muted">活動已被取消</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
