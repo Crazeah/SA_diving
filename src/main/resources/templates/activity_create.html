@@ -1,60 +1,70 @@
 <!DOCTYPE html>
-<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>建立新活動 | 潛水社</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
     <style>
-        body { 
-            background: linear-gradient(135deg, #e0f7fa 0%, #80deea 100%); 
-            min-height: 100vh; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
+        body {
+            background: linear-gradient(135deg, #e0f7fa 0%, #80deea 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             padding: 20px 0;
         }
-        .card { 
-            border: none; 
-            border-radius: 20px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
-            backdrop-filter: blur(10px); 
-            background: rgba(255, 255, 255, 0.9); 
+
+        .card {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.9);
         }
-        .btn-gradient { 
-            background: linear-gradient(45deg, #2196F3, #21CBF3); 
-            border: none; 
-            color: white; 
-            transition: transform 0.2s; 
+
+        .btn-gradient {
+            background: linear-gradient(45deg, #2196F3, #21CBF3);
+            border: none;
+            color: white;
+            transition: transform 0.2s;
         }
-        .btn-gradient:hover { 
-            transform: translateY(-2px); 
-            box-shadow: 0 5px 15px rgba(33, 203, 243, 0.4); 
-            color: white; 
+
+        .btn-gradient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(33, 203, 243, 0.4);
+            color: white;
         }
+
         .btn-draft {
             background: linear-gradient(45deg, #9E9E9E, #BDBDBD);
             border: none;
             color: white;
             transition: transform 0.2s;
         }
+
         .btn-draft:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(158, 158, 158, 0.4);
             color: white;
         }
-        .form-control, .form-select { 
-            border-radius: 10px; 
-            padding: 10px 15px; 
-            border: 1px solid #ddd; 
+
+        .form-control,
+        .form-select {
+            border-radius: 10px;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
         }
-        .form-control:focus, .form-select:focus { 
-            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.2); 
-            border-color: #2196F3; 
+
+        .form-control:focus,
+        .form-select:focus {
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.2);
+            border-color: #2196F3;
         }
+
         #imagePreview {
             max-width: 100%;
             max-height: 300px;
@@ -62,311 +72,202 @@
             margin-top: 15px;
             display: none;
             object-fit: cover;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
+
         .required-label::after {
             content: " *";
             color: #dc3545;
         }
+
+        .is-invalid {
+            border-color: #dc3545;
+        }
     </style>
 </head>
+
 <body>
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card p-4 animate__animated animate__fadeInUp">
-                <h2 class="text-center fw-bold mb-4 text-primary">🌊 建立潛水活動</h2>
-                
-                <div class="alert alert-info mb-4">
-                    <small>
-                        <strong>📝 注意事項：</strong><br>
-                        • 活動建立後會送交管理員審核，核准後才會公開<br>
-                        • 可以先「儲存草稿」稍後再送審<br>
-                        • 標註 <span class="text-danger">*</span> 為必填欄位
-                    </small>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card p-4 animate__animated animate__fadeInUp">
+                    <h2 class="text-center fw-bold mb-4 text-primary">🌊 建立潛水活動</h2>
+
+                    <!-- 錯誤訊息 -->
+                    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <span th:text="${errorMessage}"></span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+
+                    <div class="alert alert-info mb-4">
+                        <small>
+                            <strong>📝 注意事項：</strong><br>
+                            • 活動建立後可選擇立即送審或儲存為草稿<br>
+                            • 送審後需等待管理員核准才會公開<br>
+                            • 標註 <span class="text-danger">*</span> 為必填欄位
+                        </small>
+                    </div>
+
+                    <form id="createForm" th:action="@{/activity/create}" th:object="${activityForm}" method="POST">
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold required-label">活動標題</label>
+                                <input type="text" th:field="*{title}" class="form-control"
+                                    th:classappend="${#fields.hasErrors('title')} ? 'is-invalid' : ''"
+                                    placeholder="例：綠島 Fun Dive 三天兩夜" maxlength="200" required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('title')}"
+                                    th:errors="*{title}"></div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold required-label">類別</label>
+                                <select th:field="*{category}" class="form-select"
+                                    th:classappend="${#fields.hasErrors('category')} ? 'is-invalid' : ''" required>
+                                    <option value="">請選擇...</option>
+                                    <option value="fun_dive">🐠 Fun Dive</option>
+                                    <option value="course">🎓 課程教學</option>
+                                    <option value="meeting">🍻 社團聚會</option>
+                                    <option value="水肺潛水">水肺潛水</option>
+                                    <option value="自由潛水">自由潛水</option>
+                                    <option value="浮潛">浮潛</option>
+                                </select>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('category')}"
+                                    th:errors="*{category}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold required-label">人數上限</label>
+                                <input type="number" th:field="*{maxParticipants}" class="form-control"
+                                    th:classappend="${#fields.hasErrors('maxParticipants')} ? 'is-invalid' : ''" min="1"
+                                    max="1000" required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('maxParticipants')}"
+                                    th:errors="*{maxParticipants}"></div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold required-label">開始時間</label>
+                                <input type="datetime-local" id="startTime" th:field="*{startTime}" class="form-control"
+                                    th:classappend="${#fields.hasErrors('startTime')} ? 'is-invalid' : ''" required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('startTime')}"
+                                    th:errors="*{startTime}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold required-label">結束時間</label>
+                                <input type="datetime-local" id="endTime" th:field="*{endTime}" class="form-control"
+                                    th:classappend="${#fields.hasErrors('endTime')} ? 'is-invalid' : ''" required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('endTime')}"
+                                    th:errors="*{endTime}"></div>
+                            </div>
+
+                            <div class="col-md-8">
+                                <label class="form-label fw-bold required-label">地點</label>
+                                <input type="text" th:field="*{location}" class="form-control"
+                                    th:classappend="${#fields.hasErrors('location')} ? 'is-invalid' : ''"
+                                    placeholder="例：小琉球、綠島、墾丁" maxlength="300" required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('location')}"
+                                    th:errors="*{location}"></div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold required-label">費用（元）</label>
+                                <input type="number" th:field="*{cost}" class="form-control"
+                                    th:classappend="${#fields.hasErrors('cost')} ? 'is-invalid' : ''" placeholder="0"
+                                    min="0" step="100" required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('cost')}" th:errors="*{cost}">
+                                </div>
+                            </div>
+
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">參加資格</label>
+                                <select th:field="*{qualifications}" class="form-select">
+                                    <option value="">不限</option>
+                                    <option value="ALL">🌊 所有會員（不限證照）</option>
+                                    <option value="OW">🎓 Open Water 以上</option>
+                                    <option value="AOW">⭐ Advanced Open Water 以上</option>
+                                    <option value="RESCUE">🚑 Rescue Diver 以上</option>
+                                    <option value="DM">👨‍✈️ Divemaster 以上</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-bold required-label">詳細內容</label>
+                                <textarea th:field="*{description}" class="form-control" rows="6"
+                                    th:classappend="${#fields.hasErrors('description')} ? 'is-invalid' : ''"
+                                    placeholder="建議包含：&#10;• 集合時間與地點&#10;• 交通方式&#10;• 裝備租借說明&#10;• 行程安排&#10;• 注意事項"
+                                    required></textarea>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('description')}"
+                                    th:errors="*{description}"></div>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-bold">宣傳圖片網址</label>
+                                <input type="url" th:field="*{imageUrl}" class="form-control"
+                                    placeholder="https://example.com/image.jpg" id="imageUrlInput">
+                                <small class="text-muted">請輸入圖片的URL網址</small>
+                                <img id="imagePreview" alt="圖片預覽">
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" name="submitForReview" value="true"
+                                class="btn btn-gradient btn-lg fw-bold">
+                                📤 送出審核
+                            </button>
+                            <button type="submit" name="submitForReview" value="false"
+                                class="btn btn-draft btn-lg fw-bold">
+                                💾 儲存草稿（稍後再送審）
+                            </button>
+                            <a href="/activity/my-list" class="btn btn-outline-secondary">
+                                ← 返回我的活動列表
+                            </a>
+                        </div>
+                    </form>
                 </div>
-                
-                <form id="createForm" th:action="@{/activity/create}" method="POST" enctype="multipart/form-data">
-                    <div class="row g-3">
-                        <div class="col-md-12">
-                            <label class="form-label fw-bold required-label">活動標題</label>
-                            <input type="text" name="title" class="form-control" 
-                                   placeholder="例：綠島 Fun Dive 三天兩夜" 
-                                   maxlength="100" required>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold required-label">類別</label>
-                            <select name="category" class="form-select" required>
-                                <option value="">請選擇...</option>
-                                <option value="fun_dive">🐠 Fun Dive</option>
-                                <option value="course">🎓 課程教學</option>
-                                <option value="meeting">🍻 社團聚會</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold required-label">人數上限</label>
-                            <input type="number" name="maxParticipants" class="form-control" 
-                                   value="10" min="1" max="100" required>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold required-label">開始時間</label>
-                            <input type="datetime-local" id="startTime" name="startTime" 
-                                   class="form-control" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold required-label">結束時間</label>
-                            <input type="datetime-local" id="endTime" name="endTime" 
-                                   class="form-control" required>
-                        </div>
-
-                        <div class="col-md-8">
-                            <label class="form-label fw-bold required-label">地點</label>
-                            <input type="text" name="location" class="form-control" 
-                                   placeholder="例：小琉球、綠島、墾丁" 
-                                   maxlength="100" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold required-label">費用（元）</label>
-                            <input type="number" name="cost" class="form-control" 
-                                   placeholder="0" min="0" step="100" required>
-                        </div>
-
-                        <div class="col-md-12">
-                            <label class="form-label fw-bold required-label">參加資格</label>
-                            <select name="qualification" class="form-select" required>
-                                <option value="">請選擇...</option>
-                                <option value="ALL">🌊 所有會員（不限證照）</option>
-                                <option value="OW">🎓 Open Water 以上</option>
-                                <option value="AOW">⭐ Advanced Open Water 以上</option>
-                                <option value="RESCUE">🚑 Rescue Diver 以上</option>
-                                <option value="DM">👨‍✈️ Divemaster 以上</option>
-                            </select>
-                        </div>
-
-                        <div class="col-12">
-                            <label class="form-label fw-bold">詳細內容</label>
-                            <textarea name="description" class="form-control" rows="6" 
-                                      placeholder="建議包含：&#10;• 集合時間與地點&#10;• 交通方式&#10;• 裝備租借說明&#10;• 行程安排&#10;• 注意事項"></textarea>
-                        </div>
-
-                        <div class="col-12">
-                            <label class="form-label fw-bold">宣傳圖片</label>
-                            <input type="file" name="image" id="imageInput" class="form-control" 
-                                   accept="image/jpeg,image/png,image/jpg" 
-                                   onchange="previewImage(event)">
-                            <img id="imagePreview" alt="圖片預覽">
-                        </div>
-                    </div>
-
-                    <div class="d-grid gap-2 mt-4">
-                        <button type="button" onclick="submitForm()" class="btn btn-gradient btn-lg fw-bold">
-                            📤 送出審核
-                        </button>
-                        <button type="button" onclick="saveDraft()" class="btn btn-draft btn-lg fw-bold">
-                            💾 儲存草稿（稍後再送審）
-                        </button>
-                        <a href="/activity/my-list" class="btn btn-outline-secondary">
-                            ← 返回我的活動列表
-                        </a>
-                    </div>
-                </form>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const now = new Date();
-        const dateString = now.toISOString().slice(0, 16);
-        document.getElementById('startTime').min = dateString;
-        document.getElementById('endTime').min = dateString;
-    });
-
-    function previewImage(event) {
-        const file = event.target.files[0];
-        if (file) {
-            if (file.size > 5 * 1024 * 1024) {
-                Swal.fire({
-                    icon: 'error',
-                    title: '檔案太大',
-                    text: '圖片大小不能超過 5MB！'
-                });
-                event.target.value = '';
-                document.getElementById('imagePreview').style.display = 'none';
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const preview = document.getElementById('imagePreview');
-                preview.src = e.target.result;
-                preview.style.display = 'block';
-            };
-            reader.readAsDataURL(file);
-        }
-    }
-
-    function validateForm() {
-        const startTime = document.getElementById('startTime').value;
-        const endTime = document.getElementById('endTime').value;
-        
-        const requiredFields = document.querySelectorAll('[required]');
-        for (let field of requiredFields) {
-            if (!field.value.trim()) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: '請填寫完整',
-                    text: '請確認所有必填欄位都已填寫！'
-                });
-                field.focus();
-                return false;
-            }
-        }
-
-        if (startTime && endTime) {
-            const start = new Date(startTime);
-            const end = new Date(endTime);
-            
-            if (end <= start) {
-                Swal.fire({
-                    icon: 'error',
-                    title: '時間錯誤',
-                    text: '結束時間必須晚於開始時間！',
-                    confirmButtonColor: '#2196F3'
-                });
-                document.getElementById('endTime').focus();
-                return false;
-            }
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Set minimum date for datetime inputs
             const now = new Date();
-            if (start < now) {
-                Swal.fire({
-                    icon: 'error',
-                    title: '時間錯誤',
-                    text: '活動開始時間不能早於現在！',
-                    confirmButtonColor: '#2196F3'
-                });
-                document.getElementById('startTime').focus();
-                return false;
-            }
-        }
+            const dateString = now.toISOString().slice(0, 16);
+            document.getElementById('startTime').min = dateString;
+            document.getElementById('endTime').min = dateString;
 
-        return true;
-    }
+            // Image preview from URL
+            const imageUrlInput = document.getElementById('imageUrlInput');
+            const imagePreview = document.getElementById('imagePreview');
 
-    function submitForm() {
-        if (!validateForm()) {
-            return;
-        }
-
-        Swal.fire({
-            title: '確定送出審核？',
-            html: '<p>活動將送交管理員審核</p><small class="text-muted">核准後才會在活動列表顯示</small>',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: '送出',
-            cancelButtonText: '再檢查一下',
-            confirmButtonColor: '#2196F3',
-            reverseButtons: true
-        }).then((result) => {
-            if (result.isConfirmed) {
-                Swal.fire({
-                    title: '上傳中...',
-                    html: '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>',
-                    allowOutsideClick: false,
-                    showConfirmButton: false
-                });
-
-                const form = document.getElementById('createForm');
-                const statusInput = document.createElement('input');
-                statusInput.type = 'hidden';
-                statusInput.name = 'status';
-                statusInput.value = 'PENDING_AUDIT';
-                form.appendChild(statusInput);
-
-                // 實際送出表單（後端串好後解開這行）
-                // form.submit();
-
-                // 測試用（正式版請刪除）
-                setTimeout(() => {
-                    Swal.fire({
-                        icon: 'success',
-                        title: '已送出！',
-                        text: '活動已送交審核，請等待管理員核准',
-                        confirmButtonColor: '#2196F3'
-                    }).then(() => {
-                        // window.location.href = '/activity/my-list';
-                    });
-                }, 1500);
-            }
-        });
-    }
-
-    function saveDraft() {
-        const title = document.querySelector('[name="title"]').value;
-        if (!title.trim()) {
-            Swal.fire({
-                icon: 'warning',
-                title: '請至少填寫標題',
-                text: '草稿也需要有標題才能儲存喔！',
-                confirmButtonColor: '#2196F3'
+            imageUrlInput.addEventListener('blur', function () {
+                const url = this.value;
+                if (url) {
+                    imagePreview.src = url;
+                    imagePreview.style.display = 'block';
+                    imagePreview.onerror = function () {
+                        this.style.display = 'none';
+                    };
+                } else {
+                    imagePreview.style.display = 'none';
+                }
             });
-            return;
-        }
 
-        Swal.fire({
-            title: '儲存草稿？',
-            html: '<p>可以稍後繼續編輯</p><small class="text-muted">草稿不會顯示在活動列表</small>',
-            icon: 'info',
-            showCancelButton: true,
-            confirmButtonText: '儲存',
-            cancelButtonText: '取消',
-            confirmButtonColor: '#9E9E9E',
-            reverseButtons: true
-        }).then((result) => {
-            if (result.isConfirmed) {
-                const form = document.getElementById('createForm');
-                
-                form.action = '/activity/draft';
-                
-                const statusInput = document.createElement('input');
-                statusInput.type = 'hidden';
-                statusInput.name = 'status';
-                statusInput.value = 'DRAFTING';
-                form.appendChild(statusInput);
+            // End time validation
+            document.getElementById('endTime').addEventListener('blur', function () {
+                const startTime = document.getElementById('startTime').value;
+                const endTime = this.value;
 
-                // 實際送出表單（後端串好後解開這行）
-                // form.submit();
-
-                // 測試用（正式版請刪除）
-                Swal.fire({
-                    icon: 'success',
-                    title: '草稿已儲存',
-                    text: '可以在「我的活動」中繼續編輯',
-                    confirmButtonColor: '#9E9E9E'
-                }).then(() => {
-                    // window.location.href = '/activity/my-list';
-                });
-            }
+                if (startTime && endTime) {
+                    if (new Date(endTime) <= new Date(startTime)) {
+                        this.classList.add('is-invalid');
+                        alert('結束時間必須晚於開始時間！');
+                    } else {
+                        this.classList.remove('is-invalid');
+                    }
+                }
+            });
         });
-    }
-
-    document.getElementById('endTime').addEventListener('blur', function() {
-        const startTime = document.getElementById('startTime').value;
-        const endTime = this.value;
-        
-        if (startTime && endTime) {
-            if (new Date(endTime) <= new Date(startTime)) {
-                this.classList.add('is-invalid');
-            } else {
-                this.classList.remove('is-invalid');
-            }
-        }
-    });
-</script>
+    </script>
 </body>
+
 </html>

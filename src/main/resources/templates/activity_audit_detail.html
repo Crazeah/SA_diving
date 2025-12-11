@@ -1,299 +1,310 @@
 <!DOCTYPE html>
-<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
 <head>
     <meta charset="UTF-8">
     <title>審核詳情 | 管理後台</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
     <style>
-        body { 
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); 
+        body {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             padding-bottom: 40px;
         }
+
         .navbar-custom {
             background: linear-gradient(135deg, #2196F3, #21CBF3);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
+
         .card {
             border: none;
             border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
         }
+
         .category-badge {
             padding: 8px 16px;
             border-radius: 20px;
             font-weight: 600;
             display: inline-block;
         }
+
         .info-item {
             padding: 12px 0;
             border-bottom: 1px solid #f0f0f0;
         }
+
         .info-item:last-child {
             border-bottom: none;
         }
+
         .info-icon {
             width: 30px;
             text-align: center;
             font-size: 1.2rem;
         }
+
         .sticky-sidebar {
             position: sticky;
             top: 20px;
         }
+
         .decision-card {
             background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
             border: 2px solid #e9ecef;
         }
+
         .btn-approve {
             background: linear-gradient(45deg, #28a745, #20c997);
             border: none;
             color: white;
             transition: all 0.3s;
         }
+
         .btn-approve:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
             color: white;
         }
+
         .btn-reject {
             transition: all 0.3s;
         }
+
         .btn-reject:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
         }
+
         .breadcrumb {
             background: white;
             padding: 15px 20px;
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
         }
+
         .activity-image {
             border-radius: 15px;
             object-fit: cover;
             width: 100%;
             height: 300px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
     </style>
 </head>
+
 <body>
 
-<!-- 導航列 -->
-<nav class="navbar navbar-dark navbar-custom mb-4">
-    <div class="container-fluid">
-        <a class="navbar-brand fw-bold" href="/">🌊 潛水社管理系統</a>
-        <div class="d-flex align-items-center">
-            <span class="text-white me-3">
-                <span th:text="${currentUser.name}">管理員</span>
-                <small class="opacity-75">(SuperManager)</small>
-            </span>
-            <a href="/logout" class="btn btn-outline-light btn-sm">登出</a>
+    <!-- 導航列 -->
+    <nav class="navbar navbar-dark navbar-custom mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="/">🌊 潛水社管理系統</a>
+            <div class="d-flex align-items-center">
+                <span class="text-white me-3">
+                    <span th:text="${currentUser?.name}">管理員</span>
+                    <small class="opacity-75">(SuperManager)</small>
+                </span>
+                <a href="/logout" class="btn btn-outline-light btn-sm">登出</a>
+            </div>
         </div>
-    </div>
-</nav>
-
-<div class="container py-4">
-    <!-- 麵包屑導航 -->
-    <nav aria-label="breadcrumb" class="mb-4 animate__animated animate__fadeInDown">
-        <ol class="breadcrumb mb-0">
-            <li class="breadcrumb-item"><a href="/">首頁</a></li>
-            <li class="breadcrumb-item"><a href="/activity/audit/list">待審核列表</a></li>
-            <li class="breadcrumb-item active" aria-current="page">
-                審核詳情 <span th:text="'#' + ${activity.id}">#101</span>
-            </li>
-        </ol>
     </nav>
 
-    <div class="row">
-        <!-- 左側：活動詳情 -->
-        <div class="col-lg-8">
-            <div class="card shadow-sm border-0 mb-4 animate__animated animate__fadeInLeft">
-                <!-- 活動圖片 -->
-                <img th:src="${activity.imageUrl} ?: 'https://via.placeholder.com/800x300/2196F3/FFFFFF?text=Diving+Activity'" 
-                     class="activity-image" 
-                     alt="活動圖片">
-                
-                <div class="card-body p-4">
-                    <!-- 類別標籤 -->
-                    <span class="category-badge mb-3"
-                          th:classappend="${activity.category.name() == 'FUN_DIVE'} ? 'bg-info text-white' :
-                                          ${activity.category.name() == 'COURSE'} ? 'bg-success text-white' :
-                                          ${activity.category.name() == 'MEETING'} ? 'bg-warning text-dark' : 'bg-secondary text-white'"
-                          th:text="${activity.category.displayName}">
-                        Fun Dive
-                    </span>
-                    
-                    <!-- 活動標題 -->
-                    <h2 class="card-title fw-bold mb-4" th:text="${activity.title}">
-                        小琉球三天兩夜潛旅
-                    </h2>
-                    
-                    <!-- 活動資訊 -->
-                    <div class="row mb-4">
-                        <div class="col-md-6 info-item">
-                            <div class="d-flex align-items-center">
-                                <span class="info-icon">📅</span>
-                                <div class="flex-grow-1">
-                                    <small class="text-muted d-block">開始時間</small>
-                                    <strong th:text="${#temporals.format(activity.startTime, 'yyyy-MM-dd HH:mm')}">
-                                        2026-01-03 10:00
-                                    </strong>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 info-item">
-                            <div class="d-flex align-items-center">
-                                <span class="info-icon">🏁</span>
-                                <div class="flex-grow-1">
-                                    <small class="text-muted d-block">結束時間</small>
-                                    <strong th:text="${#temporals.format(activity.endTime, 'yyyy-MM-dd HH:mm')}">
-                                        2026-01-05 18:00
-                                    </strong>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 info-item">
-                            <div class="d-flex align-items-center">
-                                <span class="info-icon">📍</span>
-                                <div class="flex-grow-1">
-                                    <small class="text-muted d-block">活動地點</small>
-                                    <strong th:text="${activity.location}">小琉球</strong>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 info-item">
-                            <div class="d-flex align-items-center">
-                                <span class="info-icon">💰</span>
-                                <div class="flex-grow-1">
-                                    <small class="text-muted d-block">活動費用</small>
-                                    <strong>
-                                        NT$ <span th:text="${#numbers.formatInteger(activity.cost, 0, 'COMMA')}">12,000</span>
-                                    </strong>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 info-item">
-                            <div class="d-flex align-items-center">
-                                <span class="info-icon">👥</span>
-                                <div class="flex-grow-1">
-                                    <small class="text-muted d-block">人數上限</small>
-                                    <strong th:text="${activity.maxParticipants} + ' 人'">20 人</strong>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 info-item">
-                            <div class="d-flex align-items-center">
-                                <span class="info-icon">🎯</span>
-                                <div class="flex-grow-1">
-                                    <small class="text-muted d-block">參加資格</small>
-                                    <strong th:text="${activity.qualification.displayName}">Open Water 以上</strong>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+    <div class="container py-4">
+        <!-- 成功/錯誤訊息 -->
+        <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <span th:text="${successMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <span th:text="${errorMessage}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
 
-                    <hr class="my-4">
+        <!-- 麵包屑導航 -->
+        <nav aria-label="breadcrumb" class="mb-4 animate__animated animate__fadeInDown">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="/">首頁</a></li>
+                <li class="breadcrumb-item"><a href="/activity/audit/list">待審核列表</a></li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    審核詳情 <span th:text="'#' + ${activity.activityId}">#101</span>
+                </li>
+            </ol>
+        </nav>
 
-                    <!-- 詳細內容 -->
-                    <h5 class="fw-bold mb-3">📝 活動詳細內容</h5>
-                    <div class="card bg-light border-0 p-3">
-                        <p class="card-text text-secondary mb-0" 
-                           style="white-space: pre-line;"
-                           th:text="${activity.description} ?: '（提案人未填寫詳細說明）'">
-                            這裡會顯示幹部填寫的活動詳細介紹，例如集合地點、注意事項、裝備租借規則等等...
-                        </p>
+        <div class="row">
+            <!-- 左側：活動詳情 -->
+            <div class="col-lg-8">
+                <div class="card shadow-sm border-0 mb-4 animate__animated animate__fadeInLeft">
+                    <!-- 活動圖片 -->
+                    <img th:src="${activity.imageUrl} ?: 'https://via.placeholder.com/800x300/2196F3/FFFFFF?text=Diving+Activity'"
+                        class="activity-image" alt="活動圖片">
+
+                    <div class="card-body p-4">
+                        <!-- 類別標籤 -->
+                        <span class="category-badge mb-3 bg-info text-white" th:text="${activity.category}">
+                            Fun Dive
+                        </span>
+
+                        <!-- 活動標題 -->
+                        <h2 class="card-title fw-bold mb-4" th:text="${activity.title}">
+                            小琉球三天兩夜潛旅
+                        </h2>
+
+                        <!-- 活動資訊 -->
+                        <div class="row mb-4">
+                            <div class="col-md-6 info-item">
+                                <div class="d-flex align-items-center">
+                                    <span class="info-icon">📅</span>
+                                    <div class="flex-grow-1">
+                                        <small class="text-muted d-block">開始時間</small>
+                                        <strong th:text="${#temporals.format(activity.startTime, 'yyyy-MM-dd HH:mm')}">
+                                            2026-01-03 10:00
+                                        </strong>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 info-item">
+                                <div class="d-flex align-items-center">
+                                    <span class="info-icon">🏁</span>
+                                    <div class="flex-grow-1">
+                                        <small class="text-muted d-block">結束時間</small>
+                                        <strong th:text="${#temporals.format(activity.endTime, 'yyyy-MM-dd HH:mm')}">
+                                            2026-01-05 18:00
+                                        </strong>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 info-item">
+                                <div class="d-flex align-items-center">
+                                    <span class="info-icon">📍</span>
+                                    <div class="flex-grow-1">
+                                        <small class="text-muted d-block">活動地點</small>
+                                        <strong th:text="${activity.location}">小琉球</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 info-item">
+                                <div class="d-flex align-items-center">
+                                    <span class="info-icon">💰</span>
+                                    <div class="flex-grow-1">
+                                        <small class="text-muted d-block">活動費用</small>
+                                        <strong>
+                                            NT$ <span
+                                                th:text="${#numbers.formatDecimal(activity.cost, 0, 'COMMA', 0, 'POINT')}">12,000</span>
+                                        </strong>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 info-item">
+                                <div class="d-flex align-items-center">
+                                    <span class="info-icon">👥</span>
+                                    <div class="flex-grow-1">
+                                        <small class="text-muted d-block">人數上限</small>
+                                        <strong th:text="${activity.maxParticipants} + ' 人'">20 人</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 info-item">
+                                <div class="d-flex align-items-center">
+                                    <span class="info-icon">🎯</span>
+                                    <div class="flex-grow-1">
+                                        <small class="text-muted d-block">參加資格</small>
+                                        <strong th:text="${activity.qualifications} ?: '不限'">不限</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- 詳細內容 -->
+                        <h5 class="fw-bold mb-3">📝 活動詳細內容</h5>
+                        <div class="card bg-light border-0 p-3">
+                            <p class="card-text text-secondary mb-0" style="white-space: pre-line;"
+                                th:text="${activity.description} ?: '（提案人未填寫詳細說明）'">
+                                這裡會顯示幹部填寫的活動詳細介紹，例如集合地點、注意事項、裝備租借規則等等...
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- 右側：審核決策 -->
-        <div class="col-lg-4">
-            <div class="sticky-sidebar animate__animated animate__fadeInRight">
-                <!-- 提案人資訊 -->
-                <div class="card shadow border-0 mb-3">
-                    <div class="card-header bg-white fw-bold">
-                        📋 申請資訊
-                    </div>
-                    <div class="card-body">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" 
-                                 style="width: 50px; height: 50px; font-size: 1.5rem;">
-                                👤
+            <!-- 右側：審核決策 -->
+            <div class="col-lg-4">
+                <div class="sticky-sidebar animate__animated animate__fadeInRight">
+                    <!-- 提案人資訊 -->
+                    <div class="card shadow border-0 mb-3">
+                        <div class="card-header bg-white fw-bold">
+                            📋 申請資訊
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+                                    style="width: 50px; height: 50px; font-size: 1.5rem;">
+                                    👤
+                                </div>
+                                <div>
+                                    <div class="fw-bold" th:text="${activity.creator.name}">王小明</div>
+                                    <small class="text-muted">社團幹部 (Manager)</small>
+                                </div>
                             </div>
-                            <div>
-                                <div class="fw-bold" th:text="${activity.creator.name}">王小明</div>
-                                <small class="text-muted">社團幹部 (Manager)</small>
+
+                            <hr>
+
+                            <div class="small">
+                                <div class="mb-2">
+                                    <strong>📧 聯絡信箱：</strong><br>
+                                    <a th:href="'mailto:' + ${activity.creator.email}"
+                                        th:text="${activity.creator.email}">
+                                        manager@example.com
+                                    </a>
+                                </div>
+                                <div class="mb-2">
+                                    <strong>📅 申請時間：</strong><br>
+                                    <span th:text="${#temporals.format(activity.createdAt, 'yyyy-MM-dd HH:mm:ss')}">
+                                        2025-12-09 10:30:45
+                                    </span>
+                                </div>
+                                <div>
+                                    <strong>🆔 活動編號：</strong><br>
+                                    <code th:text="'#' + ${activity.activityId}">#101</code>
+                                </div>
                             </div>
                         </div>
-                        
-                        <hr>
-                        
-                        <div class="small">
-                            <div class="mb-2">
-                                <strong>📧 聯絡信箱：</strong><br>
-                                <a th:href="'mailto:' + ${activity.creator.email}" 
-                                   th:text="${activity.creator.email}">
-                                    manager@example.com
+                    </div>
+
+                    <!-- 審核決策卡片 -->
+                    <div class="card shadow decision-card border-0">
+                        <div class="card-header bg-white fw-bold">
+                            👮‍♂️ 管理員審核決策
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-light small mb-3">
+                                <strong>⚠️ 審核提醒：</strong><br>
+                                • 請確認活動資訊完整且合理<br>
+                                • 確認時間、地點、費用等關鍵資訊<br>
+                                • 核准後活動將立即上架
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <!-- 核准表單 -->
+                                <form th:action="@{/activity/audit/{id}/approve(id=${activity.activityId})}"
+                                    method="POST">
+                                    <button type="submit" class="btn btn-approve btn-lg w-100">
+                                        ✅ 核准發佈 (Approve)
+                                    </button>
+                                </form>
+
+                                <!-- 退回表單 -->
+                                <button type="button" class="btn btn-outline-danger btn-reject" data-bs-toggle="modal"
+                                    data-bs-target="#rejectModal">
+                                    ❌ 退回修改 (Reject)
+                                </button>
+
+                                <a th:href="@{/activity/audit/list}" class="btn btn-outline-secondary">
+                                    ← 返回列表
                                 </a>
-                            </div>
-                            <div class="mb-2">
-                                <strong>📅 申請時間：</strong><br>
-                                <span th:text="${#temporals.format(activity.createdAt, 'yyyy-MM-dd HH:mm:ss')}">
-                                    2025-12-09 10:30:45
-                                </span>
-                            </div>
-                            <div>
-                                <strong>🆔 活動編號：</strong><br>
-                                <code th:text="'#' + ${activity.id}">#101</code>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 審核決策卡片 -->
-                <div class="card shadow decision-card border-0">
-                    <div class="card-header bg-white fw-bold">
-                        👮‍♂️ 管理員審核決策
-                    </div>
-                    <div class="card-body">
-                        <div class="alert alert-light small mb-3">
-                            <strong>⚠️ 審核提醒：</strong><br>
-                            • 請確認活動資訊完整且合理<br>
-                            • 確認時間、地點、費用等關鍵資訊<br>
-                            • 核准後活動將立即上架
-                        </div>
-                        
-                        <div class="d-grid gap-2">
-                            <button onclick="approveActivity()" class="btn btn-approve btn-lg">
-                                ✅ 核准發佈 (Approve)
-                            </button>
-                            
-                            <button onclick="rejectActivity()" class="btn btn-outline-danger btn-reject">
-                                ❌ 退回修改 (Reject)
-                            </button>
-
-                            <a th:href="@{/activity/audit/list}" class="btn btn-outline-secondary">
-                                ← 返回列表
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 審核歷史 -->
-                <div class="card shadow border-0 mt-3" th:if="${activity.auditHistory}">
-                    <div class="card-header bg-white fw-bold">
-                        📜 審核歷史
-                    </div>
-                    <div class="card-body">
-                        <div class="small text-muted" th:each="history : ${activity.auditHistory}">
-                            <div class="mb-2">
-                                <span th:text="${#temporals.format(history.timestamp, 'yyyy-MM-dd HH:mm')}"></span><br>
-                                <strong th:text="${history.action}"></strong>
-                                <span th:if="${history.reason}" th:text="': ' + ${history.reason}"></span>
                             </div>
                         </div>
                     </div>
@@ -301,194 +312,58 @@
             </div>
         </div>
     </div>
-</div>
 
-<script>
-    // 1. 核准邏輯（對應 UC-A09 主要流程）
-    function approveActivity() {
-        Swal.fire({
-            title: '確認核准此活動？',
-            html: `
-                <div class="text-start">
-                    <p class="mb-2">此活動將會：</p>
-                    <ul class="small">
-                        <li>✅ 立即上架至活動列表</li>
-                        <li>📧 自動發送核准通知給提案人</li>
-                        <li>🌐 會員可以開始報名</li>
-                    </ul>
-                </div>
-            `,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#28a745',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: '是的，核准！',
-            cancelButtonText: '再想想',
-            reverseButtons: true
-        }).then((result) => {
-            if (result.isConfirmed) {
-                Swal.fire({
-                    title: '處理中...',
-                    html: '<div class="spinner-border text-success" role="status"></div>',
-                    allowOutsideClick: false,
-                    showConfirmButton: false
-                });
+    <!-- 退回原因 Modal -->
+    <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form th:action="@{/activity/audit/{id}/reject(id=${activity.activityId})}" method="POST">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="rejectModalLabel">❌ 退回活動</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="reasonSelect" class="form-label">選擇退回原因</label>
+                            <select class="form-select" id="reasonSelect" onchange="updateReason(this)">
+                                <option value="">請選擇...</option>
+                                <option value="活動時間安排不當，請重新規劃">⏰ 時間安排不當</option>
+                                <option value="活動費用設定不合理，請重新評估">💰 費用設定不合理</option>
+                                <option value="活動存在安全疑慮，請補充安全措施說明">⚠️ 安全性疑慮</option>
+                                <option value="活動資訊不完整，請補充詳細內容">📝 資訊不完整</option>
+                                <option value="參加資格限制不適當，請重新設定">🎯 資格限制不適當</option>
+                                <option value="地點資訊有誤或不明確，請修正">📍 地點資訊有誤</option>
+                                <option value="other">✏️ 其他原因</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="reason" class="form-label">詳細說明 <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="reason" name="reason" rows="4"
+                                placeholder="請詳細說明需要修改的地方..." required></textarea>
+                            <div class="form-text">退回原因將會通知提案人，請詳細說明需要修改的項目</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-danger">確認退回</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
-                // TODO: 呼叫後端 API
-                // fetch('/api/activity/audit/approve/' + activityId, {
-                //     method: 'POST',
-                //     headers: { 'Content-Type': 'application/json' }
-                // })
-
-                // 測試用（正式版請刪除）
-                setTimeout(() => {
-                    Swal.fire({
-                        icon: 'success',
-                        title: '核准成功！',
-                        html: '<p>活動已發佈到前台</p><small class="text-muted">Email 通知已發送</small>',
-                        confirmButtonColor: '#28a745'
-                    }).then(() => {
-                        window.location.href = '/activity/audit/list';
-                    });
-                }, 1500);
-            }
-        });
-    }
-
-    // 2. 退回邏輯（對應 UC-A09 替代流程 A1）
-    async function rejectActivity() {
-        const { value: reasonType } = await Swal.fire({
-            title: '請選擇退回原因',
-            input: 'select',
-            inputOptions: {
-                'time_conflict': '⏰ 時間安排不當',
-                'budget_issue': '💰 費用設定不合理',
-                'safety_concern': '⚠️ 安全性疑慮',
-                'incomplete_info': '📝 資訊不完整',
-                'qualification_issue': '🎯 資格限制不適當',
-                'location_issue': '📍 地點資訊有誤',
-                'other': '✏️ 其他原因（請輸入）'
-            },
-            inputPlaceholder: '選擇原因...',
-            showCancelButton: true,
-            confirmButtonText: '下一步',
-            cancelButtonText: '取消',
-            confirmButtonColor: '#dc3545',
-            inputValidator: (value) => {
-                if (!value) {
-                    return '請選擇退回原因！';
-                }
-            }
-        });
-
-        if (!reasonType) return;
-
-        let finalReason = '';
-
-        if (reasonType === 'other') {
-            const { value: customReason } = await Swal.fire({
-                title: '請詳細說明退回原因',
-                input: 'textarea',
-                inputLabel: '詳細原因',
-                inputPlaceholder: '請說明需要修改的地方...\n例如：活動時間與其他活動衝突、費用計算方式需要重新評估等',
-                inputAttributes: {
-                    'aria-label': '請輸入退回原因',
-                    'rows': 5
-                },
-                showCancelButton: true,
-                confirmButtonText: '確認退回',
-                cancelButtonText: '取消',
-                confirmButtonColor: '#dc3545',
-                inputValidator: (value) => {
-                    if (!value || value.trim().length < 10) {
-                        return '請輸入至少 10 個字的詳細說明！';
-                    }
-                }
-            });
-
-            if (!customReason) return;
-            finalReason = customReason;
-        } else {
-            const reasonMap = {
-                'time_conflict': '活動時間安排不當，請重新規劃',
-                'budget_issue': '活動費用設定不合理，請重新評估',
-                'safety_concern': '活動存在安全疑慮，請補充安全措施說明',
-                'incomplete_info': '活動資訊不完整，請補充詳細內容',
-                'qualification_issue': '參加資格限制不適當，請重新設定',
-                'location_issue': '地點資訊有誤或不明確，請修正'
-            };
-
-            const { value: additionalNote } = await Swal.fire({
-                title: '是否要補充說明？',
-                html: `
-                    <p class="mb-3">預設原因：<strong>${reasonMap[reasonType]}</strong></p>
-                    <p class="small text-muted">可以補充更詳細的說明（選填）</p>
-                `,
-                input: 'textarea',
-                inputPlaceholder: '補充說明...',
-                showCancelButton: true,
-                confirmButtonText: '確認退回',
-                cancelButtonText: '取消',
-                confirmButtonColor: '#dc3545'
-            });
-
-            if (additionalNote === undefined) return;
-
-            finalReason = reasonMap[reasonType];
-            if (additionalNote && additionalNote.trim()) {
-                finalReason += '\n\n補充說明：' + additionalNote;
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function updateReason(select) {
+            const reasonTextarea = document.getElementById('reason');
+            if (select.value && select.value !== 'other') {
+                reasonTextarea.value = select.value;
+            } else if (select.value === 'other') {
+                reasonTextarea.value = '';
+                reasonTextarea.focus();
             }
         }
-
-        Swal.fire({
-            title: '確認退回此活動？',
-            html: `
-                <div class="text-start">
-                    <p class="mb-2"><strong>退回原因：</strong></p>
-                    <div class="alert alert-warning small">${finalReason.replace(/\n/g, '<br>')}</div>
-                    <p class="small text-muted mt-3">
-                        📧 系統將自動通知提案人修改<br>
-                        ✏️ 提案人修改後會重新送審
-                    </p>
-                </div>
-            `,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#dc3545',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: '確認退回',
-            cancelButtonText: '取消',
-            reverseButtons: true
-        }).then((result) => {
-            if (result.isConfirmed) {
-                Swal.fire({
-                    title: '處理中...',
-                    html: '<div class="spinner-border text-danger" role="status"></div>',
-                    allowOutsideClick: false,
-                    showConfirmButton: false
-                });
-
-                // TODO: 呼叫後端 API
-                // fetch('/api/activity/audit/reject/' + activityId, {
-                //     method: 'POST',
-                //     headers: { 'Content-Type': 'application/json' },
-                //     body: JSON.stringify({ reason: finalReason })
-                // })
-
-                // 測試用（正式版請刪除）
-                setTimeout(() => {
-                    Swal.fire({
-                        icon: 'info',
-                        title: '已退回',
-                        html: '<p>通知已發送給提案人</p><small class="text-muted">等待修改後重新送審</small>',
-                        confirmButtonColor: '#dc3545'
-                    }).then(() => {
-                        window.location.href = '/activity/audit/list';
-                    });
-                }, 1500);
-            }
-        });
-    }
-</script>
+    </script>
 </body>
+
 </html>

@@ -1,49 +1,57 @@
 <!DOCTYPE html>
-<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
+<html lang="zh-TW" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>修改活動 | 潛水社</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
     <style>
-        body { 
-            background: linear-gradient(135deg, #e0f7fa 0%, #80deea 100%); 
-            min-height: 100vh; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
+        body {
+            background: linear-gradient(135deg, #e0f7fa 0%, #80deea 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             padding: 20px 0;
         }
-        .card { 
-            border: none; 
-            border-radius: 20px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
-            backdrop-filter: blur(10px); 
-            background: rgba(255, 255, 255, 0.9); 
+
+        .card {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.9);
         }
-        .btn-gradient { 
-            background: linear-gradient(45deg, #2196F3, #21CBF3); 
-            border: none; 
-            color: white; 
-            transition: transform 0.2s; 
+
+        .btn-gradient {
+            background: linear-gradient(45deg, #2196F3, #21CBF3);
+            border: none;
+            color: white;
+            transition: transform 0.2s;
         }
-        .btn-gradient:hover { 
-            transform: translateY(-2px); 
-            box-shadow: 0 5px 15px rgba(33, 203, 243, 0.4); 
-            color: white; 
+
+        .btn-gradient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(33, 203, 243, 0.4);
+            color: white;
         }
-        .form-control, .form-select { 
-            border-radius: 10px; 
-            padding: 10px 15px; 
-            border: 1px solid #ddd; 
+
+        .form-control,
+        .form-select {
+            border-radius: 10px;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
         }
-        .form-control:focus, .form-select:focus { 
-            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.2); 
-            border-color: #2196F3; 
+
+        .form-control:focus,
+        .form-select:focus {
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.2);
+            border-color: #2196F3;
         }
+
         #imagePreview {
             max-width: 100%;
             max-height: 300px;
@@ -51,268 +59,218 @@
             margin-top: 15px;
             display: none;
             object-fit: cover;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
+
         .required-label::after {
             content: " *";
             color: #dc3545;
         }
+
         .rejection-reason {
             background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%);
             border-left: 4px solid #ff9800;
             animation: slideInDown 0.5s;
         }
+
+        .is-invalid {
+            border-color: #dc3545;
+        }
     </style>
 </head>
+
 <body>
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card p-4 animate__animated animate__fadeInUp">
-                <h2 class="text-center fw-bold mb-4 text-primary">✏️ 修改活動內容</h2>
-                
-                <!-- 顯示退回原因（對應 UC-A09 退回流程） -->
-                <div class="alert rejection-reason" th:if="${activity.status.name() == 'NEEDS_REVISION'}">
-                    <div class="d-flex align-items-start">
-                        <div class="me-3" style="font-size: 2rem;">⚠️</div>
-                        <div class="flex-grow-1">
-                            <h5 class="alert-heading fw-bold mb-2">管理員退回原因</h5>
-                            <p class="mb-1" th:text="${activity.rejectionReason}">資格設定不合理，建議調整為 AOW 以上</p>
-                            <hr>
-                            <small class="text-muted">
-                                退回時間：<span th:text="${#temporals.format(activity.updatedAt, 'yyyy-MM-dd HH:mm')}">2025-12-09 15:30</span>
-                            </small>
-                        </div>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card p-4 animate__animated animate__fadeInUp">
+                    <h2 class="text-center fw-bold mb-4 text-primary">✏️ 修改活動內容</h2>
+
+                    <!-- 錯誤訊息 -->
+                    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <span th:text="${errorMessage}"></span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
-                </div>
 
-                <!-- 草稿狀態提示 -->
-                <div class="alert alert-secondary" th:if="${activity.status.name() == 'DRAFTING'}">
-                    <small>
-                        <strong>📝 草稿狀態：</strong>此活動尚未送審，修改後可選擇繼續儲存或送出審核
-                    </small>
-                </div>
-                
-                <form id="editForm" th:action="@{/activity/update/{id}(id=${activity.id})}" method="POST" enctype="multipart/form-data">
-                    <input type="hidden" name="_method" value="PUT">
-                    <input type="hidden" name="activityId" th:value="${activity.id}">
-                    
-                    <div class="row g-3">
-                        <div class="col-md-12">
-                            <label class="form-label fw-bold required-label">活動標題</label>
-                            <input type="text" name="title" class="form-control" 
-                                   th:value="${activity.title}"
-                                   placeholder="例：綠島 Fun Dive 三天兩夜" 
-                                   maxlength="100" required>
-                        </div>
+                    <!-- 成功訊息 -->
+                    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                        <span th:text="${successMessage}"></span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold required-label">類別</label>
-                            <select name="category" class="form-select" required>
-                                <option value="fun_dive" th:selected="${activity.category.name() == 'FUN_DIVE'}">🐠 Fun Dive</option>
-                                <option value="course" th:selected="${activity.category.name() == 'COURSE'}">🎓 課程教學</option>
-                                <option value="meeting" th:selected="${activity.category.name() == 'MEETING'}">🍻 社團聚會</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold required-label">人數上限</label>
-                            <input type="number" name="maxParticipants" class="form-control" 
-                                   th:value="${activity.maxParticipants}"
-                                   min="1" max="100" required>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold required-label">開始時間</label>
-                            <input type="datetime-local" id="startTime" name="startTime" 
-                                   class="form-control"
-                                   th:value="${#temporals.format(activity.startTime, 'yyyy-MM-dd\'T\'HH:mm')}"
-                                   required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold required-label">結束時間</label>
-                            <input type="datetime-local" id="endTime" name="endTime" 
-                                   class="form-control"
-                                   th:value="${#temporals.format(activity.endTime, 'yyyy-MM-dd\'T\'HH:mm')}"
-                                   required>
-                        </div>
-
-                        <div class="col-md-8">
-                            <label class="form-label fw-bold required-label">地點</label>
-                            <input type="text" name="location" class="form-control" 
-                                   th:value="${activity.location}"
-                                   placeholder="例：小琉球、綠島、墾丁" 
-                                   maxlength="100" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold required-label">費用（元）</label>
-                            <input type="number" name="cost" class="form-control" 
-                                   th:value="${activity.cost}"
-                                   min="0" step="100" required>
-                        </div>
-
-                        <div class="col-md-12">
-                            <label class="form-label fw-bold required-label">參加資格</label>
-                            <select name="qualification" class="form-select" required>
-                                <option value="ALL" th:selected="${activity.qualification.name() == 'ALL'}">🌊 所有會員（不限證照）</option>
-                                <option value="OW" th:selected="${activity.qualification.name() == 'OW'}">🎓 Open Water 以上</option>
-                                <option value="AOW" th:selected="${activity.qualification.name() == 'AOW'}">⭐ Advanced Open Water 以上</option>
-                                <option value="RESCUE" th:selected="${activity.qualification.name() == 'RESCUE'}">🚑 Rescue Diver 以上</option>
-                                <option value="DM" th:selected="${activity.qualification.name() == 'DM'}">👨‍✈️ Divemaster 以上</option>
-                            </select>
-                        </div>
-
-                        <div class="col-12">
-                            <label class="form-label fw-bold">詳細內容</label>
-                            <textarea name="description" class="form-control" rows="6" 
-                                      th:text="${activity.description}"
-                                      placeholder="建議包含：集合地點、交通方式、裝備說明等"></textarea>
-                        </div>
-
-                        <div class="col-12">
-                            <label class="form-label fw-bold">宣傳圖片</label>
-                            
-                            <div th:if="${activity.imageUrl}" class="mb-2">
-                                <img th:src="${activity.imageUrl}" 
-                                     class="img-thumbnail" 
-                                     style="max-height: 200px; border-radius: 10px;"
-                                     alt="現有圖片">
-                                <p class="text-muted small mt-1">👆 目前的宣傳圖片</p>
+                    <!-- 顯示退回原因（對應 UC-A09 退回流程） -->
+                    <div class="alert rejection-reason" th:if="${activity.status.name() == 'NEEDS_REVISION'}">
+                        <div class="d-flex align-items-start">
+                            <div class="me-3" style="font-size: 2rem;">⚠️</div>
+                            <div class="flex-grow-1">
+                                <h5 class="alert-heading fw-bold mb-2">管理員退回原因</h5>
+                                <p class="mb-1" th:text="${activity.rejectionReason}">退回原因</p>
+                                <hr>
+                                <small class="text-muted">
+                                    退回時間：<span
+                                        th:text="${#temporals.format(activity.updatedAt, 'yyyy-MM-dd HH:mm')}">2025-12-09
+                                        15:30</span>
+                                </small>
                             </div>
-                            
-                            <input type="file" name="image" id="imageInput" class="form-control" 
-                                   accept="image/jpeg,image/png,image/jpg" 
-                                   onchange="previewImage(event)">
-                            <small class="text-muted">若不更換圖片可不選擇檔案</small>
-                            <img id="imagePreview" alt="新圖片預覽">
                         </div>
                     </div>
 
-                    <div class="d-grid gap-2 mt-4">
-                        <button type="button" onclick="submitForm('submit')" class="btn btn-gradient btn-lg fw-bold">
-                            📤 儲存並送出審核
-                        </button>
-                        <button type="button" onclick="submitForm('draft')" class="btn btn-outline-secondary btn-lg">
-                            💾 僅儲存修改（不送審）
-                        </button>
-                        <a th:href="@{/activity/my-list}" class="btn btn-outline-secondary">
-                            ← 取消並返回
-                        </a>
+                    <!-- 草稿狀態提示 -->
+                    <div class="alert alert-secondary" th:if="${activity.status.name() == 'DRAFTING'}">
+                        <small>
+                            <strong>📝 草稿狀態：</strong>此活動尚未送審，修改後可選擇繼續儲存或送出審核
+                        </small>
                     </div>
-                </form>
+
+                    <form id="editForm" th:action="@{/activity/edit/{id}(id=${activity.activityId})}" method="POST">
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold required-label">活動標題</label>
+                                <input type="text" name="title" class="form-control" th:value="${activity.title}"
+                                    placeholder="例：綠島 Fun Dive 三天兩夜" maxlength="200" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold required-label">類別</label>
+                                <select name="category" class="form-select" required>
+                                    <option value="fun_dive" th:selected="${activity.category == 'fun_dive'}">🐠 Fun
+                                        Dive</option>
+                                    <option value="course" th:selected="${activity.category == 'course'}">🎓 課程教學
+                                    </option>
+                                    <option value="meeting" th:selected="${activity.category == 'meeting'}">🍻 社團聚會
+                                    </option>
+                                    <option value="水肺潛水" th:selected="${activity.category == '水肺潛水'}">水肺潛水</option>
+                                    <option value="自由潛水" th:selected="${activity.category == '自由潛水'}">自由潛水</option>
+                                    <option value="浮潛" th:selected="${activity.category == '浮潛'}">浮潛</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold required-label">人數上限</label>
+                                <input type="number" name="maxParticipants" class="form-control"
+                                    th:value="${activity.maxParticipants}" min="1" max="1000" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold required-label">開始時間</label>
+                                <input type="datetime-local" id="startTime" name="startTime" class="form-control"
+                                    th:value="${#temporals.format(activity.startTime, 'yyyy-MM-dd''T''HH:mm')}"
+                                    required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold required-label">結束時間</label>
+                                <input type="datetime-local" id="endTime" name="endTime" class="form-control"
+                                    th:value="${#temporals.format(activity.endTime, 'yyyy-MM-dd''T''HH:mm')}" required>
+                            </div>
+
+                            <div class="col-md-8">
+                                <label class="form-label fw-bold required-label">地點</label>
+                                <input type="text" name="location" class="form-control" th:value="${activity.location}"
+                                    placeholder="例：小琉球、綠島、墾丁" maxlength="300" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold required-label">費用（元）</label>
+                                <input type="number" name="cost" class="form-control" th:value="${activity.cost}"
+                                    min="0" step="100" required>
+                            </div>
+
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">參加資格</label>
+                                <select name="qualifications" class="form-select">
+                                    <option value=""
+                                        th:selected="${activity.qualifications == null or activity.qualifications == ''}">
+                                        不限</option>
+                                    <option value="ALL" th:selected="${activity.qualifications == 'ALL'}">🌊 所有會員（不限證照）
+                                    </option>
+                                    <option value="OW" th:selected="${activity.qualifications == 'OW'}">🎓 Open Water 以上
+                                    </option>
+                                    <option value="AOW" th:selected="${activity.qualifications == 'AOW'}">⭐ Advanced
+                                        Open Water 以上</option>
+                                    <option value="RESCUE" th:selected="${activity.qualifications == 'RESCUE'}">🚑
+                                        Rescue Diver 以上</option>
+                                    <option value="DM" th:selected="${activity.qualifications == 'DM'}">👨‍✈️ Divemaster
+                                        以上</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-bold required-label">詳細內容</label>
+                                <textarea name="description" class="form-control" rows="6"
+                                    th:text="${activity.description}" placeholder="建議包含：集合地點、交通方式、裝備說明等"
+                                    required></textarea>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-bold">宣傳圖片網址</label>
+
+                                <div th:if="${activity.imageUrl}" class="mb-2">
+                                    <img th:src="${activity.imageUrl}" class="img-thumbnail"
+                                        style="max-height: 200px; border-radius: 10px;" alt="現有圖片">
+                                    <p class="text-muted small mt-1">👆 目前的宣傳圖片</p>
+                                </div>
+
+                                <input type="url" name="imageUrl" id="imageUrlInput" class="form-control"
+                                    th:value="${activity.imageUrl}" placeholder="https://example.com/image.jpg">
+                                <small class="text-muted">修改圖片網址，留空則保留原圖</small>
+                                <img id="imagePreview" alt="新圖片預覽">
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" name="submitForReview" value="true"
+                                class="btn btn-gradient btn-lg fw-bold">
+                                📤 儲存並送出審核
+                            </button>
+                            <button type="submit" name="submitForReview" value="false"
+                                class="btn btn-outline-secondary btn-lg">
+                                💾 僅儲存修改（不送審）
+                            </button>
+                            <a th:href="@{/activity/my-list}" class="btn btn-outline-secondary">
+                                ← 取消並返回
+                            </a>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-    function previewImage(event) {
-        const file = event.target.files[0];
-        if (file) {
-            if (file.size > 5 * 1024 * 1024) {
-                Swal.fire({
-                    icon: 'error',
-                    title: '檔案太大',
-                    text: '圖片大小不能超過 5MB！'
-                });
-                event.target.value = '';
-                document.getElementById('imagePreview').style.display = 'none';
-                return;
-            }
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Image preview from URL
+            const imageUrlInput = document.getElementById('imageUrlInput');
+            const imagePreview = document.getElementById('imagePreview');
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const preview = document.getElementById('imagePreview');
-                preview.src = e.target.result;
-                preview.style.display = 'block';
-            };
-            reader.readAsDataURL(file);
-        }
-    }
-
-    function validateForm() {
-        const startTime = document.getElementById('startTime').value;
-        const endTime = document.getElementById('endTime').value;
-        
-        const requiredFields = document.querySelectorAll('[required]');
-        for (let field of requiredFields) {
-            if (!field.value.trim()) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: '請填寫完整',
-                    text: '請確認所有必填欄位都已填寫！'
-                });
-                field.focus();
-                return false;
-            }
-        }
-
-        if (startTime && endTime && new Date(endTime) <= new Date(startTime)) {
-            Swal.fire({
-                icon: 'error',
-                title: '時間錯誤',
-                text: '結束時間必須晚於開始時間！',
-                confirmButtonColor: '#2196F3'
+            imageUrlInput.addEventListener('blur', function () {
+                const url = this.value;
+                if (url) {
+                    imagePreview.src = url;
+                    imagePreview.style.display = 'block';
+                    imagePreview.onerror = function () {
+                        this.style.display = 'none';
+                    };
+                } else {
+                    imagePreview.style.display = 'none';
+                }
             });
-            return false;
-        }
 
-        return true;
-    }
+            // End time validation
+            document.getElementById('endTime').addEventListener('blur', function () {
+                const startTime = document.getElementById('startTime').value;
+                const endTime = this.value;
 
-    function submitForm(action) {
-        if (!validateForm()) {
-            return;
-        }
-
-        const isSubmit = action === 'submit';
-        const title = isSubmit ? '確定送出審核？' : '儲存修改？';
-        const text = isSubmit ? '修改後的活動將重新送交管理員審核' : '將儲存為草稿狀態，不會送審';
-        const icon = isSubmit ? 'question' : 'info';
-
-        Swal.fire({
-            title: title,
-            text: text,
-            icon: icon,
-            showCancelButton: true,
-            confirmButtonText: isSubmit ? '送出審核' : '儲存',
-            cancelButtonText: '取消',
-            confirmButtonColor: '#2196F3',
-            reverseButtons: true
-        }).then((result) => {
-            if (result.isConfirmed) {
-                const form = document.getElementById('editForm');
-                
-                const statusInput = document.createElement('input');
-                statusInput.type = 'hidden';
-                statusInput.name = 'newStatus';
-                statusInput.value = isSubmit ? 'PENDING_AUDIT' : 'DRAFTING';
-                form.appendChild(statusInput);
-
-                Swal.fire({
-                    title: '處理中...',
-                    html: '<div class="spinner-border text-primary" role="status"></div>',
-                    allowOutsideClick: false,
-                    showConfirmButton: false
-                });
-
-                // 實際送出（後端串好後解開）
-                // form.submit();
-
-                // 測試用
-                setTimeout(() => {
-                    Swal.fire({
-                        icon: 'success',
-                        title: isSubmit ? '已重新送審！' : '已儲存修改',
-                        text: isSubmit ? '等待管理員審核' : '可隨時繼續編輯',
-                        confirmButtonColor: '#2196F3'
-                    }).then(() => {
-                        // window.location.href = '/activity/my-list';
-                    });
-                }, 1500);
-            }
+                if (startTime && endTime) {
+                    if (new Date(endTime) <= new Date(startTime)) {
+                        this.classList.add('is-invalid');
+                        alert('結束時間必須晚於開始時間！');
+                    } else {
+                        this.classList.remove('is-invalid');
+                    }
+                }
+            });
         });
-    }
-</script>
+    </script>
 </body>
+
 </html>
