@@ -57,7 +57,7 @@ public class DataInitializer implements CommandLineRunner {
 
         // Create Managers
         Manager manager1 = new Manager(
-                "王小明",
+                "柴小竹",
                 "manager1@diveclub.com",
                 passwordEncoder.encode("manager123"),
                 "0923456789",
@@ -67,7 +67,7 @@ public class DataInitializer implements CommandLineRunner {
         log.info("Created Manager: {}", manager1.getEmail());
 
         Manager manager2 = new Manager(
-                "李美麗",
+                "柴美麗",
                 "manager2@diveclub.com",
                 passwordEncoder.encode("manager123"),
                 "0934567890",
@@ -78,7 +78,7 @@ public class DataInitializer implements CommandLineRunner {
 
         // Create regular member
         User member = new User();
-        member.setName("張三");
+        member.setName("Karina");
         member.setEmail("member@diveclub.com");
         member.setPassword(passwordEncoder.encode("member123"));
         member.setPhoneNumber("0945678901");
@@ -102,7 +102,7 @@ public class DataInitializer implements CommandLineRunner {
         activity1.setMaxParticipants(20);
         activity1.setCost(new BigDecimal("3500.00"));
         activity1.setQualifications("無需任何經驗，歡迎新手");
-        activity1.setImageUrl("https://example.com/images/diving1.jpg");
+        activity1.setImageUrl("/images/default/scuba-diving.jpg");
         activity1.setStatus(ActivityStatus.PUBLISHED);
         activity1.setCreator(manager1);
         activityRepository.save(activity1);
@@ -119,7 +119,7 @@ public class DataInitializer implements CommandLineRunner {
         activity2.setMaxParticipants(15);
         activity2.setCost(new BigDecimal("8500.00"));
         activity2.setQualifications("須持有 OW 證照");
-        activity2.setImageUrl("https://example.com/images/diving2.jpg");
+        activity2.setImageUrl("/images/default/unnamed.jpg");
         activity2.setStatus(ActivityStatus.PUBLISHED);
         activity2.setCreator(manager1);
         activityRepository.save(activity2);
@@ -136,7 +136,7 @@ public class DataInitializer implements CommandLineRunner {
         activity3.setMaxParticipants(30);
         activity3.setCost(new BigDecimal("2000.00"));
         activity3.setQualifications("無限制");
-        activity3.setImageUrl("https://example.com/images/conservation.jpg");
+        activity3.setImageUrl("/images/default/snorkeling.jpg");
         activity3.setStatus(ActivityStatus.PENDING_REVIEW);
         activity3.setCreator(manager2);
         activityRepository.save(activity3);
